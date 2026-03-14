@@ -152,6 +152,45 @@
                     </div>
                 </div>
 
+                {{-- Location (Optional) --}}
+                <div class="col-sm-12 mb-4">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0"><i class="bx bx-map-pin me-1"></i>Location (Optional)</h6>
+                            <button type="button" id="toggleMapBtn" class="btn btn-sm btn-outline-secondary">
+                                <i class="bx bx-map me-1"></i>Open Map Picker
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-5 mb-3">
+                                    <label class="form-label fw-semibold">Latitude</label>
+                                    <input type="number" step="any" name="latitude" id="latitude"
+                                           class="form-control @error('latitude') is-invalid @enderror"
+                                           value="{{ old('latitude') }}" placeholder="e.g. -1.2921">
+                                    @error('latitude')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-md-5 mb-3">
+                                    <label class="form-label fw-semibold">Longitude</label>
+                                    <input type="number" step="any" name="longitude" id="longitude"
+                                           class="form-control @error('longitude') is-invalid @enderror"
+                                           value="{{ old('longitude') }}" placeholder="e.g. 36.8219">
+                                    @error('longitude')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                </div>
+                                <div class="col-md-2 mb-3 d-flex align-items-end">
+                                    <button type="button" onclick="clearLocation()" class="btn btn-outline-danger w-100">
+                                        <i class="bx bx-x me-1"></i>Clear
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="mapSection" class="d-none mt-2">
+                                <div id="map-picker" style="height: 350px; border-radius: 6px;"></div>
+                                <small class="text-muted mt-1 d-block">Click on the map to set the subscriber's location. Drag the pin to adjust.</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="col-sm-12">
                     <button type="submit" class="btn btn-primary me-2">
                         <i class="bx bx-save me-1"></i> Save Subscriber
@@ -164,7 +203,14 @@
 </div>
 @endsection
 
+@push('styles')
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+@endpush
+
 @push('scripts')
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WLaA=" crossorigin=""></script>
 <script>
 function genPassword() {
     const chars = 'abcdefghijkmnpqrstuvwxyz23456789';
@@ -172,5 +218,58 @@ function genPassword() {
     for (let i = 0; i < 8; i++) pass += chars[Math.floor(Math.random() * chars.length)];
     document.getElementById('password').value = pass;
 }
+
+// Leaflet map picker
+let map, marker;
+function initMap() {
+    // Default center: Nairobi, Kenya
+    const defaultLat = parseFloat(document.getElementById('latitude').value) || -1.2921;
+    const defaultLng = parseFloat(document.getElementById('longitude').value) || 36.8219;
+
+    map = L.map('map-picker').setView([defaultLat, defaultLng], 12);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+    if (document.getElementById('latitude').value) {
+        marker = L.marker([defaultLat, defaultLng], {draggable: true}).addTo(map);
+        marker.on('dragend', updateCoords);
+    }
+
+    map.on('click', function(e) {
+        if (marker) {
+            marker.setLatLng(e.latlng);
+        } else {
+            marker = L.marker(e.latlng, {draggable: true}).addTo(map);
+            marker.on('dragend', updateCoords);
+        }
+        document.getElementById('latitude').value  = e.latlng.lat.toFixed(7);
+        document.getElementById('longitude').value = e.latlng.lng.toFixed(7);
+    });
+}
+
+function updateCoords(e) {
+    const pos = e.target.getLatLng();
+    document.getElementById('latitude').value  = pos.lat.toFixed(7);
+    document.getElementById('longitude').value = pos.lng.toFixed(7);
+}
+
+function clearLocation() {
+    document.getElementById('latitude').value  = '';
+    document.getElementById('longitude').value = '';
+    if (marker) { map.removeLayer(marker); marker = null; }
+}
+
+// Initialise map when the section is first shown
+const mapToggleBtn = document.getElementById('toggleMapBtn');
+let mapInitialised = false;
+mapToggleBtn.addEventListener('click', function() {
+    const mapSection = document.getElementById('mapSection');
+    mapSection.classList.toggle('d-none');
+    if (!mapInitialised && !mapSection.classList.contains('d-none')) {
+        initMap();
+        mapInitialised = true;
+    }
+});
 </script>
 @endpush

@@ -17,6 +17,51 @@ class SubscriberController extends Controller
     public function index(Request $request)
     {
         $query = Subscriber::with(['package', 'router']);
+        // Allow filtering by 'type' (alias for connection_type) on the general index view
+        if ($request->filled('type')) {
+            $query->where('connection_type', $request->type);
+        }
+        $this->applyFilters($query, $request);
+        $subscribers = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+        $packages = IspPackage::where('is_active', true)->orderBy('name')->get();
+        $routers  = Router::where('is_active', true)->orderBy('name')->get();
+        return view('admin.isp.subscribers.index', compact('subscribers', 'packages', 'routers'));
+    }
+
+    public function create()
+    {
+        $packages = IspPackage::where('is_active', true)->orderBy('price')->get();
+        $routers  = Router::where('is_active', true)->orderBy('name')->get();
+        return view('admin.isp.subscribers.create', compact('packages', 'routers'));
+    }
+
+    /** Display PPPoE subscribers only. */
+    public function pppoe(Request $request)
+    {
+        $query = Subscriber::with(['package', 'router'])
+            ->where('connection_type', 'pppoe');
+        $this->applyFilters($query, $request);
+        $subscribers = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+        $packages = IspPackage::where('is_active', true)->orderBy('name')->get();
+        $routers  = Router::where('is_active', true)->orderBy('name')->get();
+        return view('admin.isp.subscribers.pppoe', compact('subscribers', 'packages', 'routers'));
+    }
+
+    /** Display Hotspot subscribers only. */
+    public function hotspot(Request $request)
+    {
+        $query = Subscriber::with(['package', 'router'])
+            ->where('connection_type', 'hotspot');
+        $this->applyFilters($query, $request);
+        $subscribers = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
+        $packages = IspPackage::where('is_active', true)->orderBy('name')->get();
+        $routers  = Router::where('is_active', true)->orderBy('name')->get();
+        return view('admin.isp.subscribers.hotspot', compact('subscribers', 'packages', 'routers'));
+    }
+
+    /** Shared filter logic for subscriber queries. */
+    private function applyFilters($query, Request $request): void
+    {
         if ($request->filled('q')) {
             $q = $request->q;
             $query->where(function ($sq) use ($q) {
@@ -25,18 +70,9 @@ class SubscriberController extends Controller
                    ->orWhere('phone', 'like', "%{$q}%");
             });
         }
-        if ($request->filled('status')) $query->where('status', $request->status);
-        if ($request->filled('type')) $query->where('connection_type', $request->type);
-
-        $subscribers = $query->orderBy('created_at', 'desc')->paginate(20)->withQueryString();
-        return view('admin.isp.subscribers.index', compact('subscribers'));
-    }
-
-    public function create()
-    {
-        $packages = IspPackage::where('is_active', true)->orderBy('price')->get();
-        $routers  = Router::where('is_active', true)->orderBy('name')->get();
-        return view('admin.isp.subscribers.create', compact('packages', 'routers'));
+        if ($request->filled('status'))    $query->where('status', $request->status);
+        if ($request->filled('package_id')) $query->where('isp_package_id', $request->package_id);
+        if ($request->filled('router_id')) $query->where('router_id', $request->router_id);
     }
 
     public function store(Request $request)
@@ -52,6 +88,8 @@ class SubscriberController extends Controller
             'connection_type' => 'required|in:pppoe,hotspot',
             'status'          => 'required|in:active,suspended,expired',
             'expires_at'      => 'nullable|date',
+            'latitude'        => 'nullable|numeric|between:-90,90',
+            'longitude'       => 'nullable|numeric|between:-180,180',
         ]);
 
         $plainPassword = $data['password'];
@@ -103,6 +141,8 @@ class SubscriberController extends Controller
             'connection_type' => 'required|in:pppoe,hotspot',
             'status'          => 'required|in:active,suspended,expired',
             'expires_at'      => 'nullable|date',
+            'latitude'        => 'nullable|numeric|between:-90,90',
+            'longitude'       => 'nullable|numeric|between:-180,180',
         ]);
 
         $plainPassword = null;

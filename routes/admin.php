@@ -186,6 +186,8 @@ Route::middleware(['is_installed'])->group(function () {
         // Subscribers
         Route::prefix('isp/subscribers')->name('isp.subscribers.')->controller(SubscriberController::class)->group(function () {
             Route::get('/', 'index')->name('index');
+            Route::get('/pppoe', 'pppoe')->name('pppoe');
+            Route::get('/hotspot', 'hotspot')->name('hotspot');
             Route::get('/create', 'create')->name('create');
             Route::post('/', 'store')->name('store');
             Route::get('/{subscriber}', 'show')->name('show');

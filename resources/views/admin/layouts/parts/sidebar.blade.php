@@ -107,13 +107,6 @@
             </a>
         </li>
 
-        <li class="menu-item {{ is_active_menu('admin.isp.routers.', true) }}">
-            <a href="{{ route('admin.isp.routers.index') }}" class="menu-link">
-                <i class="menu-icon tf-icons bx bx-router"></i>
-                <div class="text-truncate">Routers</div>
-            </a>
-        </li>
-
         <li class="menu-item {{ is_active_menu('admin.isp.packages.', true) }}">
             <a href="{{ route('admin.isp.packages.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-package"></i>
@@ -121,11 +114,47 @@
             </a>
         </li>
 
-        <li class="menu-item {{ is_active_menu('admin.isp.subscribers.', true) }}">
-            <a href="{{ route('admin.isp.subscribers.index') }}" class="menu-link">
+        <li class="menu-item {{ is_active_menu('admin.isp.routers.', true) }}">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons bx bx-router"></i>
+                <div class="text-truncate">Routers</div>
+            </a>
+            <ul class="menu-sub">
+                <li class="menu-item {{ is_active_menu('admin.isp.routers.index') }}">
+                    <a href="{{ route('admin.isp.routers.index') }}" class="menu-link">
+                        <div class="text-truncate">All Routers</div>
+                    </a>
+                </li>
+                <li class="menu-item {{ is_active_menu('admin.isp.routers.monitor') }}">
+                    <a href="{{ route('admin.isp.routers.index') }}#monitor" class="menu-link">
+                        <div class="text-truncate">MikroTik Monitor</div>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
+        <li class="menu-item {{ is_active_menu('admin.isp.subscribers.pppoe') || is_active_menu('admin.isp.subscribers.hotspot') || is_active_menu('admin.isp.subscribers.index') ? 'active open' : '' }}">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
                 <i class="menu-icon tf-icons bx bx-group"></i>
                 <div class="text-truncate">Subscribers</div>
             </a>
+            <ul class="menu-sub">
+                <li class="menu-item {{ is_active_menu('admin.isp.subscribers.pppoe') }}">
+                    <a href="{{ route('admin.isp.subscribers.pppoe') }}" class="menu-link">
+                        <div class="text-truncate">PPPoE Subscribers</div>
+                    </a>
+                </li>
+                <li class="menu-item {{ is_active_menu('admin.isp.subscribers.hotspot') }}">
+                    <a href="{{ route('admin.isp.subscribers.hotspot') }}" class="menu-link">
+                        <div class="text-truncate">Hotspot Subscribers</div>
+                    </a>
+                </li>
+                <li class="menu-item {{ is_active_menu('admin.isp.subscribers.index') }}">
+                    <a href="{{ route('admin.isp.subscribers.index') }}" class="menu-link">
+                        <div class="text-truncate">All Subscribers</div>
+                    </a>
+                </li>
+            </ul>
         </li>
 
         <li class="menu-item {{ is_active_menu('admin.isp.sessions.', true) }}">
