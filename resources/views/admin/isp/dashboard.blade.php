@@ -147,6 +147,19 @@
         </div>
     </div>
 
+    {{-- 10: Total Expenses This Month --}}
+    <div class="col-xl-4 col-md-6 col-12 mb-4">
+        <div class="card h-100 stat-card red">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1 text-muted small">Expenses This Month</p>
+                    <h4 class="mb-0 fw-bold text-danger">KES {{ number_format($totalExpensesMonth, 0) }}</h4>
+                </div>
+                <div class="text-danger stat-icon"><i class="bx bx-wallet-alt"></i></div>
+            </div>
+        </div>
+    </div>
+
     {{-- ========== EXPIRING TABLE ========== --}}
     <div class="col-sm-12 mb-4">
         <div class="card">
@@ -298,6 +311,14 @@
             </div>
         </div>
     </div>
+
+    {{-- Revenue vs Expenses Chart --}}
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header"><h5 class="mb-0"><i class="bx bx-bar-chart-alt-2 me-2"></i>Revenue vs Expenses (Last 6 Months)</h5></div>
+            <div class="card-body"><canvas id="revVsExpChart" height="80"></canvas></div>
+        </div>
+    </div>
 </div>
 @endsection
 
@@ -343,6 +364,29 @@ $(function () {
             }]
         },
         options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+    });
+
+    // Revenue vs Expenses Chart
+    const rveLabels   = @json($revVsExpLabels);
+    const rveRevenue  = @json($revVsExpRevenue);
+    const rveExpenses = @json($revVsExpExpenses);
+    const rveProfit   = @json($revVsExpProfit);
+
+    new Chart(document.getElementById('revVsExpChart'), {
+        type: 'bar',
+        data: {
+            labels: rveLabels,
+            datasets: [
+                { type: 'bar',  label: 'Revenue (KES)',  data: rveRevenue,  backgroundColor: 'rgba(40,167,69,.7)',  order: 2 },
+                { type: 'bar',  label: 'Expenses (KES)', data: rveExpenses, backgroundColor: 'rgba(220,53,69,.7)',  order: 2 },
+                { type: 'line', label: 'Net Profit',     data: rveProfit,   borderColor: '#007bff', backgroundColor: 'transparent', tension: .4, order: 1, pointRadius: 4 },
+            ]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } },
+            scales: { y: { beginAtZero: true } }
+        }
     });
 });
 </script>
