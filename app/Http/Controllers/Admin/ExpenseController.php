@@ -126,11 +126,11 @@ class ExpenseController extends Controller
         $csv = "Title,Amount,Category,Payment Method,Reference,Date\n";
         foreach ($expenses as $e) {
             $csv .= implode(',', [
-                '"' . addslashes($e->title) . '"',
+                '"' . str_replace('"', '""', $e->title) . '"',
                 $e->amount,
                 $e->category,
                 $e->payment_method,
-                $e->reference ?? '',
+                '"' . str_replace('"', '""', $e->reference ?? '') . '"',
                 $e->date->format('Y-m-d'),
             ]) . "\n";
         }

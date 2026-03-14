@@ -179,8 +179,7 @@
 <script>
 // Usage chart
 var chartData = @json($chartData);
-var ctx = document.getElementById('usageChart').getContext('2d');
-new Chart(ctx, {
+var usageChart = new Chart(document.getElementById('usageChart').getContext('2d'), {
     type: 'line',
     data: {
         labels: chartData.labels,
@@ -193,13 +192,20 @@ new Chart(ctx, {
 });
 
 @if($activeSession)
-// Auto-refresh active session every 30 seconds
+// Auto-refresh active session data every 30 seconds
 function refreshSession() {
     fetch('{{ route("admin.isp.subscribers.usage_data", $subscriber) }}')
         .then(r => r.json())
         .then(data => {
-            // Chart data refresh could be done here
-        });
+            // Update the usage chart with fresh data
+            if (data.labels && usageChart) {
+                usageChart.data.labels = data.labels;
+                usageChart.data.datasets[0].data = data.download;
+                usageChart.data.datasets[1].data = data.upload;
+                usageChart.update();
+            }
+        })
+        .catch(err => console.warn('Session refresh failed:', err));
 }
 setInterval(refreshSession, 30000);
 @endif

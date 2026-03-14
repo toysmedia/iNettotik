@@ -92,4 +92,11 @@
 @push('scripts')
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script>
+$(function() {
+    if (typeof $.fn.DataTable !== 'undefined' && $('#logsTable tbody tr').length > 0) {
+        // DataTables is initialized via server-side pagination; skip client-side
+    }
+});
+</script>
 @endpush

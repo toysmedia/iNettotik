@@ -47,11 +47,22 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('map_locations');
+
         Schema::table('routers', function (Blueprint $table) {
-            $table->dropColumn(['latitude', 'longitude', 'api_username', 'api_password', 'api_port']);
+            $cols = ['latitude', 'longitude', 'api_username', 'api_password', 'api_port'];
+            foreach ($cols as $col) {
+                if (Schema::hasColumn('routers', $col)) {
+                    $table->dropColumn($col);
+                }
+            }
         });
+
         Schema::table('subscribers', function (Blueprint $table) {
-            $table->dropColumn(['latitude', 'longitude']);
+            foreach (['latitude', 'longitude'] as $col) {
+                if (Schema::hasColumn('subscribers', $col)) {
+                    $table->dropColumn($col);
+                }
+            }
         });
     }
 };

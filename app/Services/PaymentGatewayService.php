@@ -24,6 +24,8 @@ class PaymentGatewayService
 
     /**
      * Initiate Kopokopo Till payment.
+     *
+     * @todo Implement Kopokopo integration (work-in-progress)
      */
     public function kopopokoInitiate(string $phone, float $amount): array
     {
@@ -33,6 +35,8 @@ class PaymentGatewayService
 
     /**
      * Initiate Equity Bank payment.
+     *
+     * @todo Implement Equity Bank integration (work-in-progress)
      */
     public function equityInitiate(string $phone, float $amount): array
     {
@@ -42,6 +46,8 @@ class PaymentGatewayService
 
     /**
      * Initiate KCB Bank payment.
+     *
+     * @todo Implement KCB Bank integration (work-in-progress)
      */
     public function kcbInitiate(string $phone, float $amount): array
     {
@@ -51,6 +57,8 @@ class PaymentGatewayService
 
     /**
      * Initiate Cooperative Bank payment.
+     *
+     * @todo Implement Cooperative Bank integration (work-in-progress)
      */
     public function coopInitiate(string $phone, float $amount): array
     {
@@ -60,6 +68,8 @@ class PaymentGatewayService
 
     /**
      * Initiate M-Pesa Till (STK Push via Till Number).
+     *
+     * @todo Implement M-Pesa Till STK Push integration (work-in-progress)
      */
     public function mpesaTillPush(string $phone, float $amount): array
     {

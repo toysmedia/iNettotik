@@ -16,10 +16,18 @@ class MikrotikApiService
         $this->router  = $router;
         $ip            = $router->wan_ip ?? $router->vpn_ip ?? '127.0.0.1';
         $port          = $router->api_port ?? 80;
+        $apiPass = '';
+        if ($router->api_password) {
+            try {
+                $apiPass = decrypt($router->api_password);
+            } catch (\Exception $e) {
+                $apiPass = $router->api_password; // fallback if not encrypted
+            }
+        }
         $this->baseUrl = "http://{$ip}:{$port}/rest";
         $this->auth    = [
             $router->api_username ?? 'admin',
-            $router->api_password ? decrypt($router->api_password) : '',
+            $apiPass,
         ];
         return $this;
     }

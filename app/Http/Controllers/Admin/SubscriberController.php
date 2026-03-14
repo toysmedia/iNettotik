@@ -203,12 +203,14 @@ class SubscriberController extends Controller
 
     public function destroy(Subscriber $subscriber)
     {
-        // Check for related records
-        $paymentCount = MpesaPayment::where('phone', $subscriber->phone)->count();
-        $sessionCount = Radacct::where('username', $subscriber->username)->count();
+        // Check for related records before deleting
+        $hasPayments = MpesaPayment::where('phone', $subscriber->phone)->exists();
+        $hasSessions = Radacct::where('username', $subscriber->username)->exists();
 
-        if ($paymentCount > 0 || $sessionCount > 0) {
-            // Only soft-delete if there are related records
+        if ($hasPayments || $hasSessions) {
+            // Soft-delete to preserve related records
+            $paymentCount = MpesaPayment::where('phone', $subscriber->phone)->count();
+            $sessionCount = Radacct::where('username', $subscriber->username)->count();
             $this->radius->removeUser($subscriber->username);
             AuditLog::record('subscriber.deleted', Subscriber::class, $subscriber->id, $subscriber->toArray(), []);
             $subscriber->update(['status' => 'suspended']);

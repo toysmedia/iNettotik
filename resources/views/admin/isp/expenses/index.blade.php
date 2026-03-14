@@ -92,4 +92,11 @@
 @push('scripts')
 <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script>
+$(function() {
+    if ($('#expenseTable tbody tr').length > 1) {
+        $('#expenseTable').DataTable({ paging: false, searching: false, info: false, order: [] });
+    }
+});
+</script>
 @endpush
