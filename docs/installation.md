@@ -2,7 +2,7 @@
 
 ## System Requirements
 - Ubuntu 22.04 LTS (recommended)
-- PHP 8.1+
+- PHP 8.1+ (8.2 or 8.3 recommended for new installations)
 - MySQL 8.0+
 - Nginx or Apache
 - Composer 2.x
@@ -15,10 +15,10 @@
 # Update system
 apt update && apt upgrade -y
 
-# Install PHP 8.1
+# Install PHP 8.2 (or replace 8.2 with 8.1/8.3 as needed)
 add-apt-repository ppa:ondrej/php -y
-apt install php8.1 php8.1-fpm php8.1-mysql php8.1-mbstring php8.1-xml \
-    php8.1-curl php8.1-zip php8.1-gd php8.1-bcmath -y
+apt install php8.2 php8.2-fpm php8.2-mysql php8.2-mbstring php8.2-xml \
+    php8.2-curl php8.2-zip php8.2-gd php8.2-bcmath -y
 
 # Install MySQL
 apt install mysql-server -y
@@ -128,7 +128,7 @@ server {
 
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/var/run/php/php8.1-fpm.sock;
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;  # adjust version as needed
     }
 }
 ```
