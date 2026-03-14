@@ -37,13 +37,12 @@ class RouterController extends Controller
             'is_active'        => 'boolean',
         ]);
 
-        // Auto-generate fields
-        $nextId = (Router::max('id') ?? 0) + 1;
+        // Auto-generate fields (pool ranges updated after creation with real ID)
         $validated['radius_secret']      = Str::random(16);
         $validated['wan_interface']      = 'ether1';
         $validated['customer_interface'] = 'bridge1';
-        $validated['pppoe_pool_range']   = "10.10.{$nextId}.1-10.10.{$nextId}.254";
-        $validated['hotspot_pool_range'] = "10.20.{$nextId}.1-10.20.{$nextId}.254";
+        $validated['pppoe_pool_range']   = '10.10.1.1-10.10.1.254';
+        $validated['hotspot_pool_range'] = '10.20.1.1-10.20.1.254';
         $validated['billing_domain']     = IspSetting::getValue('billing_domain', '');
         $validated['wan_ip']             = null;
         $validated['is_active']          = $request->boolean('is_active', true);
@@ -51,10 +50,12 @@ class RouterController extends Controller
         $router = Router::create($validated);
 
         // Set ref_code after we know the real ID
+        // Ensure IP octet is valid (1–254); use modulo to wrap if ID exceeds 254
+        $octet = (($router->id - 1) % 254) + 1;
         $router->update([
-            'ref_code'       => 'RTR-' . str_pad($router->id, 3, '0', STR_PAD_LEFT),
-            'pppoe_pool_range'   => "10.10.{$router->id}.1-10.10.{$router->id}.254",
-            'hotspot_pool_range' => "10.20.{$router->id}.1-10.20.{$router->id}.254",
+            'ref_code'           => 'RTR-' . str_pad($router->id, 3, '0', STR_PAD_LEFT),
+            'pppoe_pool_range'   => "10.10.{$octet}.1-10.10.{$octet}.254",
+            'hotspot_pool_range' => "10.20.{$octet}.1-10.20.{$octet}.254",
         ]);
 
         AuditLog::record('router.created', Router::class, $router->id, [], $router->fresh()->toArray());

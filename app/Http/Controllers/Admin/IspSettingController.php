@@ -104,6 +104,15 @@ class IspSettingController extends Controller
 
         AuditLog::record('settings.updated', IspSetting::class, null, [], array_merge(['tab' => $tab], $data));
 
-        return back()->with('success', ucfirst($tab) . ' settings saved successfully.')->with('active_tab', $tab);
+        $tabNames = [
+            'company' => 'Company',
+            'radius'  => 'RADIUS',
+            'mpesa'   => 'M-Pesa',
+            'sms'     => 'SMS',
+            'billing' => 'Billing',
+        ];
+        $tabLabel = $tabNames[$tab] ?? ucfirst($tab);
+
+        return back()->with('success', $tabLabel . ' settings saved successfully.')->with('active_tab', $tab);
     }
 }

@@ -144,7 +144,7 @@ class ReportController extends Controller
     public function revenueSummary()
     {
         $today     = MpesaPayment::where('status', 'completed')->whereDate('created_at', today())->sum('amount');
-        $yesterday = MpesaPayment::where('status', 'completed')->whereDate('created_at', now()->subDay()->startOfDay())->sum('amount');
+        $yesterday = MpesaPayment::where('status', 'completed')->whereDate('created_at', now()->subDay())->sum('amount');
         $week      = MpesaPayment::where('status', 'completed')->where('created_at', '>=', now()->startOfWeek())->sum('amount');
         $month     = MpesaPayment::where('status', 'completed')
             ->whereYear('created_at', now()->year)->whereMonth('created_at', now()->month)->sum('amount');

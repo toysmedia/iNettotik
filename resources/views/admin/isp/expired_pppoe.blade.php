@@ -168,8 +168,8 @@ function loadData(filter, start, end) {
                 escHtml(r.router),
                 '<span class="badge bg-label-warning">' + r.days_since_expiry + ' day' + (r.days_since_expiry !== 1 ? 's' : '') + '</span>',
                 '<div class="d-flex gap-1 justify-content-center">' +
-                    '<a href="' + r.edit_url + '" class="btn btn-sm btn-success" title="Reactivate"><i class="bx bx-refresh"></i></a>' +
-                    '<form method="POST" action="' + r.destroy_url + '" onsubmit="return confirm(\'Delete subscriber ' + escHtml(r.username) + '?\')">' +
+                    '<a href="' + escHtml(r.edit_url) + '" class="btn btn-sm btn-success" title="Reactivate"><i class="bx bx-refresh"></i></a>' +
+                    '<form method="POST" action="' + escHtml(r.destroy_url) + '" onsubmit="return confirm(\'Delete subscriber ' + escHtml(r.username) + '?\')">' +
                         '<input type="hidden" name="_token" value="{{ csrf_token() }}">' +
                         '<input type="hidden" name="_method" value="DELETE">' +
                         '<button type="submit" class="btn btn-sm btn-danger" title="Delete"><i class="bx bx-trash"></i></button>' +

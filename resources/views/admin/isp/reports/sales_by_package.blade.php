@@ -59,7 +59,7 @@
                             @foreach($pppoePackages as $pkg)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ $pkg->package->name ?? 'Unknown' }}</td>
+                                <td>{{ $pkg->package?->name ?? 'Unknown' }}</td>
                                 <td>{{ $pkg->total_sold }}</td>
                                 <td><strong>{{ number_format($pkg->total_revenue, 2) }}</strong></td>
                             </tr>
@@ -110,7 +110,7 @@
                             @foreach($hotspotPackages as $pkg)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
-                                <td>{{ $pkg->package->name ?? 'Unknown' }}</td>
+                                <td>{{ $pkg->package?->name ?? 'Unknown' }}</td>
                                 <td>{{ $pkg->total_sold }}</td>
                                 <td><strong>{{ number_format($pkg->total_revenue, 2) }}</strong></td>
                             </tr>
@@ -153,9 +153,9 @@ $(function () {
 
     const colors = ['#71dd37','#696cff','#03c3ec','#ffab00','#ff3e1d','#20c997','#fd7e14'];
 
-    const pppoeLabels   = @json($pppoePackages->map(fn($p) => $p->package->name ?? 'Unknown'));
+    const pppoeLabels   = @json($pppoePackages->map(fn($p) => $p->package?->name ?? 'Unknown'));
     const pppoeRevenue  = @json($pppoePackages->pluck('total_revenue'));
-    const hotspotLabels = @json($hotspotPackages->map(fn($p) => $p->package->name ?? 'Unknown'));
+    const hotspotLabels = @json($hotspotPackages->map(fn($p) => $p->package?->name ?? 'Unknown'));
     const hotspotRev    = @json($hotspotPackages->pluck('total_revenue'));
 
     if (pppoeLabels.length) {

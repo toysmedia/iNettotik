@@ -76,7 +76,7 @@
                         @foreach($topPackages as $pkg)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
-                            <td>{{ $pkg->package->name ?? 'Unknown' }}</td>
+                            <td>{{ $pkg->package?->name ?? 'Unknown' }}</td>
                             <td>{{ $pkg->count }}</td>
                             <td><strong>{{ number_format($pkg->total_revenue, 2) }}</strong></td>
                         </tr>
@@ -107,7 +107,7 @@
                         @foreach($topCustomers as $c)
                         <tr>
                             <td>{{ $loop->iteration }}</td>
-                            <td>{{ $c->subscriber->username ?? '-' }}</td>
+                            <td>{{ $c->subscriber?->username ?? '-' }}</td>
                             <td>{{ $c->count }}</td>
                             <td><strong>{{ number_format($c->total_spend, 2) }}</strong></td>
                         </tr>
