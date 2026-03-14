@@ -67,5 +67,7 @@ class Kernel extends HttpKernel
         'verified' => \Illuminate\Auth\Middleware\EnsureEmailIsVerified::class,
         'force_ajax'=> \App\Http\Middleware\ForceAjax::class,
         'is_installed' => \App\Http\Middleware\IsInstalled::class,
+        'admin' => \App\Http\Middleware\AdminMiddleware::class,
+        'reseller' => \App\Http\Middleware\ResellerMiddleware::class,
     ];
 }
