@@ -77,7 +77,7 @@
 
     {{-- Bulk Actions Form --}}
     <div class="col-sm-12">
-        <form id="bulkForm" action="{{ route('admin.isp.subscribers.bulk-action') }}" method="POST">
+        <form id="bulkForm" action="{{ route('admin.isp.subscribers.bulk') }}" method="POST">
             @csrf
             <input type="hidden" name="action" id="bulkAction">
 

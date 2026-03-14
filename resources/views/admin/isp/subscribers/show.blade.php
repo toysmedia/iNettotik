@@ -88,12 +88,15 @@
             <div class="card-header"><h6 class="mb-0">Quick Actions</h6></div>
             <div class="card-body">
                 <div class="d-flex flex-wrap gap-2">
+                    @if(Route::has('admin.isp.subscribers.renew'))
                     <form action="{{ route('admin.isp.subscribers.renew', $subscriber) }}" method="POST" class="d-inline">
                         @csrf
                         <button type="submit" class="btn btn-success">
                             <i class="bx bx-refresh me-1"></i> Renew Subscription
                         </button>
                     </form>
+                    @endif
+                    @if(Route::has('admin.isp.subscribers.toggle'))
                     <form action="{{ route('admin.isp.subscribers.toggle', $subscriber) }}" method="POST" class="d-inline">
                         @csrf
                         <button type="submit" class="btn {{ $subscriber->is_active ? 'btn-warning' : 'btn-outline-success' }}">
@@ -101,12 +104,18 @@
                             {{ $subscriber->is_active ? 'Deactivate' : 'Activate' }}
                         </button>
                     </form>
+                    @endif
+                    @if(Route::has('admin.isp.subscribers.disconnect'))
                     <form action="{{ route('admin.isp.subscribers.disconnect', $subscriber) }}" method="POST" class="d-inline">
                         @csrf
                         <button type="submit" class="btn btn-outline-danger">
                             <i class="bx bx-wifi-off me-1"></i> Disconnect Session
                         </button>
                     </form>
+                    @endif
+                    <a href="{{ route('admin.isp.subscribers.edit', $subscriber) }}" class="btn btn-outline-primary">
+                        <i class="bx bx-edit me-1"></i> Edit Subscriber
+                    </a>
                 </div>
             </div>
         </div>

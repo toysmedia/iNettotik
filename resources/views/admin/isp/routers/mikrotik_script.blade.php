@@ -84,7 +84,7 @@
     <div class="btn-group">
         <a href="{{ url()->previous() }}" class="btn btn-back">&#8592; Back</a>
         <button class="btn btn-copy" onclick="copyScript()">&#128203; Copy</button>
-        <a href="{{ route('admin.isp.routers.mikrotik-script', [$router, 'download' => 1]) }}" class="btn btn-download">&#8615; Download .rsc</a>
+        <a href="{{ route('admin.isp.routers.download_script', [$router, 'download' => 1]) }}" class="btn btn-download">&#8615; Download .rsc</a>
     </div>
 </div>
 

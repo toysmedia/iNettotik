@@ -32,7 +32,7 @@
         @endif
 
         <form action="{{ route('admin.isp.settings.update') }}" method="POST" enctype="multipart/form-data">
-            @csrf @method('PUT')
+            @csrf
 
             <div class="row">
                 {{-- Sidebar nav --}}

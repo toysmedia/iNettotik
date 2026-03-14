@@ -61,10 +61,10 @@
                                     <a href="{{ route('admin.isp.routers.edit', $router) }}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
                                         <i class="bx bx-edit"></i>
                                     </a>
-                                    <a href="{{ route('admin.isp.routers.mikrotik-script', $router) }}" class="btn btn-sm btn-outline-warning me-1" title="Generate Script" target="_blank">
+                                    <a href="{{ route('admin.isp.routers.script', $router) }}" class="btn btn-sm btn-outline-warning me-1" title="Generate Script" target="_blank">
                                         <i class="bx bx-code-alt"></i>
                                     </a>
-                                    <a href="{{ route('admin.isp.routers.hotspot-files', $router) }}" class="btn btn-sm btn-outline-secondary me-1" title="Download Hotspot Files">
+                                    <a href="{{ route('admin.isp.routers.hotspot_files', $router) }}" class="btn btn-sm btn-outline-secondary me-1" title="Download Hotspot Files">
                                         <i class="bx bx-download"></i>
                                     </a>
                                     <form action="{{ route('admin.isp.routers.destroy', $router) }}" method="POST" class="d-inline"

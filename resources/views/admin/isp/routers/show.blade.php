@@ -17,10 +17,10 @@
                 </nav>
             </div>
             <div class="d-flex gap-2">
-                <a href="{{ route('admin.isp.routers.mikrotik-script', $router) }}" class="btn btn-warning" target="_blank">
+                <a href="{{ route('admin.isp.routers.script', $router) }}" class="btn btn-warning" target="_blank">
                     <i class="bx bx-code-alt me-1"></i> Generate Script
                 </a>
-                <a href="{{ route('admin.isp.routers.hotspot-files', $router) }}" class="btn btn-secondary">
+                <a href="{{ route('admin.isp.routers.hotspot_files', $router) }}" class="btn btn-secondary">
                     <i class="bx bx-download me-1"></i> Hotspot Files
                 </a>
                 <a href="{{ route('admin.isp.routers.edit', $router) }}" class="btn btn-primary">

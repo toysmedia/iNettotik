@@ -8,6 +8,9 @@ use App\Http\Controllers\PackageController;
 use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\SupportController;
 use App\Http\Controllers\GuestController;
+use App\Http\Controllers\Customer\BuyController;
+use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
+use App\Http\Controllers\Customer\PaymentController as CustomerPaymentController;
 
 
 
@@ -60,6 +63,17 @@ Route::middleware(['is_installed'])->group(function () {
 
         Route::get('/', 'index')->name('index');
 
+    });
+
+    // Public buy page
+    Route::get('/buy', [BuyController::class, 'index'])->name('customer.buy');
+    Route::post('/buy/pay', [BuyController::class, 'pay'])->name('customer.buy.pay');
+
+    // Customer portal (auth required)
+    Route::middleware(['auth'])->prefix('customer')->name('customer.')->group(function () {
+        Route::get('/dashboard', [CustomerDashboardController::class, 'index'])->name('dashboard');
+        Route::post('/renew', [CustomerDashboardController::class, 'renew'])->name('renew');
+        Route::get('/payments', [CustomerPaymentController::class, 'index'])->name('payments');
     });
 
 });
