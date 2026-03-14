@@ -13,31 +13,49 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // Active users (PPPoE + Hotspot)
-        $activeUsers = Subscriber::where('status', 'active')
-            ->where(function ($q) {
-                $q->whereNull('expires_at')->orWhere('expires_at', '>', now());
-            })->count();
+        // --- PPPoE & Hotspot active users ---
+        $activePppoeUsers    = Subscriber::where('connection_type', 'pppoe')->where('status', 'active')->count();
+        $activeHotspotUsers  = Subscriber::where('connection_type', 'hotspot')->where('status', 'active')->count();
 
-        // Revenue stats
-        $todayRevenue  = MpesaPayment::where('status', 'completed')->whereDate('created_at', today())->sum('amount');
-        $weekRevenue   = MpesaPayment::where('status', 'completed')->where('created_at', '>=', now()->startOfWeek())->sum('amount');
-        $monthRevenue  = MpesaPayment::where('status', 'completed')->where('created_at', '>=', now()->startOfMonth())->sum('amount');
+        // --- Today's revenue split by type ---
+        $todayRevenuePppoe   = MpesaPayment::where('connection_type', 'pppoe')
+            ->where('status', 'completed')->whereDate('created_at', today())->sum('amount');
+        $todayRevenueHotspot = MpesaPayment::where('connection_type', 'hotspot')
+            ->where('status', 'completed')->whereDate('created_at', today())->sum('amount');
 
-        // Active sessions
+        // --- Monthly total revenue ---
+        $totalRevenueMonth   = MpesaPayment::where('status', 'completed')
+            ->whereYear('created_at', now()->year)
+            ->whereMonth('created_at', now()->month)
+            ->sum('amount');
+
+        // --- New PPPoE customers today ---
+        $newPppoeToday       = Subscriber::where('connection_type', 'pppoe')->whereDate('created_at', today())->count();
+
+        // --- Totals ---
+        $totalPppoeCustomers    = Subscriber::where('connection_type', 'pppoe')->count();
+        $totalHotspotCustomers  = Subscriber::where('connection_type', 'hotspot')->count();
+
+        // --- PPPoE expiring today ---
+        $expiringSubscribers = Subscriber::where('connection_type', 'pppoe')
+            ->whereBetween('expires_at', [today()->startOfDay(), today()->endOfDay()])
+            ->with(['package', 'router'])
+            ->orderBy('expires_at')
+            ->get();
+
+        $pppoeExpiringToday = $expiringSubscribers->count();
+
+        // --- Keep existing variables ---
         $activeSessions = Radacct::whereNull('acctstoptime')->count();
 
-        // New registrations today
         $newToday = Subscriber::whereDate('created_at', today())->count();
 
-        // Recent payments
         $recentPayments = MpesaPayment::with('package')
             ->where('status', 'completed')
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
 
-        // Recent sessions
         $recentSessions = Radacct::whereNull('acctstoptime')
             ->orderBy('acctstarttime', 'desc')
             ->limit(10)
@@ -55,7 +73,7 @@ class DashboardController extends Controller
         $chartLabels = [];
         $chartData   = [];
         for ($i = 29; $i >= 0; $i--) {
-            $date = now()->subDays($i)->format('Y-m-d');
+            $date          = now()->subDays($i)->format('Y-m-d');
             $chartLabels[] = now()->subDays($i)->format('d M');
             $chartData[]   = $revenueChart[$date]->total ?? 0;
         }
@@ -66,14 +84,18 @@ class DashboardController extends Controller
             ->groupBy('nasipaddress')
             ->get();
 
-        // Map NAS IP to router name
-        $routers = Router::pluck('name', 'wan_ip');
+        $routers   = Router::pluck('name', 'wan_ip');
         $pieLabels = $sessionsByRouter->map(fn($r) => $routers[$r->nasipaddress] ?? $r->nasipaddress)->values();
         $pieData   = $sessionsByRouter->pluck('count')->values();
 
         return view('admin.isp.dashboard', compact(
-            'activeUsers', 'todayRevenue', 'weekRevenue', 'monthRevenue',
-            'activeSessions', 'newToday', 'recentPayments', 'recentSessions',
+            'activePppoeUsers', 'activeHotspotUsers',
+            'todayRevenuePppoe', 'todayRevenueHotspot',
+            'totalRevenueMonth', 'newPppoeToday',
+            'totalPppoeCustomers', 'totalHotspotCustomers',
+            'pppoeExpiringToday', 'expiringSubscribers',
+            'activeSessions', 'newToday',
+            'recentPayments', 'recentSessions',
             'chartLabels', 'chartData', 'pieLabels', 'pieData'
         ));
     }
