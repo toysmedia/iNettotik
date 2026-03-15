@@ -58,10 +58,10 @@ class MikrotikScriptService
         $lines[] = "/ip pool add name=\"hotspot-pool\" ranges={$router->hotspot_pool_range}";
         $lines[] = '';
 
-        // PPP Profiles — rate-limit must be omitted when empty; RADIUS supplies Mikrotik-Rate-Limit
+        // PPP Profiles — RouterOS v7 removed use-radius from ppp profile; RADIUS is enabled at server level
         $lines[] = '# --- PPP Profiles ---';
         $lines[] = '/ppp profile remove [find name="pppoe-radius"]';
-        $lines[] = '/ppp profile add name="pppoe-radius" use-radius=yes local-address=pppoe-pool remote-address=pppoe-pool only-one=yes';
+        $lines[] = '/ppp profile add name="pppoe-radius" local-address=pppoe-pool remote-address=pppoe-pool only-one=yes';
         $lines[] = '';
 
         // PPPoE Server
@@ -151,11 +151,11 @@ class MikrotikScriptService
         $lines[] = '/ip service set api port=8728';
         $lines[] = '';
 
-        // NTP
+        // NTP — use :do/on-error to avoid "duplicate address" failures on re-runs
         $lines[] = '# --- NTP Client ---';
         $lines[] = '/system ntp client set enabled=yes';
-        $lines[] = '/system ntp client servers add address=216.239.35.0';
-        $lines[] = '/system ntp client servers add address=216.239.35.4';
+        $lines[] = ':do { /system ntp client servers add address=216.239.35.0 } on-error={}';
+        $lines[] = ':do { /system ntp client servers add address=216.239.35.4 } on-error={}';
         $lines[] = '';
 
         // DNS
@@ -168,6 +168,12 @@ class MikrotikScriptService
         $lines[] = "# Router Name: {$routerName}";
         $lines[] = "# RADIUS Server: {$radiusIp}";
         $lines[] = '# ============================================================';
+        $lines[] = '';
+
+        // WAN IP detection — outputs the router's WAN IP so it can be saved in the billing system
+        $lines[] = '# --- Report WAN IP ---';
+        $lines[] = ":local wanIP [/ip address get [find interface={$router->wan_interface}] address]";
+        $lines[] = ':put "WAN IP: $wanIP"';
 
         return implode("\n", $lines);
     }

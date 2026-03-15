@@ -49,10 +49,18 @@
                                 @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="mb-3">
-                                <label class="form-label fw-semibold">WAN IP Address <span class="text-danger">*</span></label>
+                                <label class="form-label fw-semibold">WAN IP Address</label>
                                 <input type="text" name="wan_ip" class="form-control @error('wan_ip') is-invalid @enderror"
-                                       value="{{ old('wan_ip', $router->wan_ip) }}" required>
+                                       value="{{ old('wan_ip', $router->wan_ip) }}" placeholder="e.g. 102.212.246.157">
+                                <div class="form-text">Public IP of the router. Saving this will register the router in RADIUS (NAS table).</div>
                                 @error('wan_ip')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">VPN IP / Management IP</label>
+                                <input type="text" name="vpn_ip" class="form-control @error('vpn_ip') is-invalid @enderror"
+                                       value="{{ old('vpn_ip', $router->vpn_ip) }}" placeholder="e.g. 10.0.0.1">
+                                <div class="form-text">Used for API test connection when set. Leave blank if not applicable.</div>
+                                @error('vpn_ip')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">RADIUS Secret <span class="text-danger">*</span></label>

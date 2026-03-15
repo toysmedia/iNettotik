@@ -33,6 +33,7 @@ class RouterController extends Controller
             'name'             => 'required|string|max:100',
             'model'            => 'nullable|string|max:100',
             'routeros_version' => 'nullable|string|max:50',
+            'wan_ip'           => 'nullable|ip',
             'vpn_ip'           => 'nullable|ip',
             'notes'            => 'nullable|string',
             'is_active'        => 'boolean',
@@ -45,7 +46,7 @@ class RouterController extends Controller
         $validated['pppoe_pool_range']   = '10.10.1.1-10.10.1.254';
         $validated['hotspot_pool_range'] = '10.20.1.1-10.20.1.254';
         $validated['billing_domain']     = IspSetting::getValue('billing_domain', '');
-        $validated['wan_ip']             = null;
+        $validated['wan_ip']             = $validated['wan_ip'] ?? null;
         $validated['is_active']          = $request->boolean('is_active', true);
 
         $router = Router::create($validated);
@@ -60,6 +61,10 @@ class RouterController extends Controller
         ]);
 
         AuditLog::record('router.created', Router::class, $router->id, [], $router->fresh()->toArray());
+
+        if ($router->wan_ip) {
+            $this->syncNas($router);
+        }
 
         return redirect()->route('admin.isp.routers.index')
             ->with('success', "Router '{$router->name}' created successfully.");
