@@ -49,7 +49,7 @@ class MikrotikScriptService
         // RADIUS client — nas-identifier is NOT supported in RouterOS v7; use /system identity instead
         $lines[] = '# --- RADIUS Client ---';
         $lines[] = '/radius remove [find]';
-        $lines[] = "/radius add address={$radiusIp} secret=\"{$nasSecret}\" service=ppp,hotspot,login";
+        $lines[] = '/radius add address=' . $radiusIp . ' secret="' . $nasSecret . '" service=ppp,hotspot,login';
         $lines[] = '/radius incoming set accept=yes port=3799';
         $lines[] = '';
 
@@ -64,7 +64,7 @@ class MikrotikScriptService
         // PPP Profiles — rate-limit must be omitted when empty; RADIUS supplies Mikrotik-Rate-Limit
         $lines[] = '# --- PPP Profiles ---';
         $lines[] = '/ppp profile remove [find name="pppoe-radius"]';
-        $lines[] = '/ppp profile add name="pppoe-radius" use-radius=yes local-address=pppoe-pool remote-address=pppoe-pool only-one=yes';
+        $lines[] = '/ppp profile add name="pppoe-radius" local-address=pppoe-pool remote-address=pppoe-pool only-one=yes';
         $lines[] = '';
 
         // PPPoE Server
@@ -158,13 +158,19 @@ class MikrotikScriptService
         $lines[] = '# NOTE: RouterOS v6 uses: /system ntp client set enabled=yes primary-ntp=216.239.35.0 secondary-ntp=216.239.35.4';
         $lines[] = '# The commands below use RouterOS v7 syntax:';
         $lines[] = '/system ntp client set enabled=yes';
-        $lines[] = '/system ntp client servers add address=216.239.35.0';
-        $lines[] = '/system ntp client servers add address=216.239.35.4';
+        $lines[] = ':do { /system ntp client servers add address=216.239.35.0 } on-error={}';
+        $lines[] = ':do { /system ntp client servers add address=216.239.35.4 } on-error={}';
         $lines[] = '';
 
         // DNS
         $lines[] = '# --- DNS ---';
         $lines[] = '/ip dns set allow-remote-requests=yes servers=8.8.8.8,1.1.1.1';
+        $lines[] = '';
+
+        // Report WAN IP for reference
+        $lines[] = '# --- Report WAN IP ---';
+        $lines[] = ':local wanIP [/ip address get [find interface=' . $router->wan_interface . '] address]';
+        $lines[] = ':put ("WAN IP: " . $wanIP)';
         $lines[] = '';
 
         $lines[] = '# ============================================================';

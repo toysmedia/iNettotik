@@ -49,10 +49,18 @@
                                 @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="mb-3">
-                                <label class="form-label fw-semibold">WAN IP Address <span class="text-danger">*</span></label>
+                                <label class="form-label fw-semibold">WAN IP Address</label>
                                 <input type="text" name="wan_ip" class="form-control @error('wan_ip') is-invalid @enderror"
-                                       value="{{ old('wan_ip', $router->wan_ip) }}" required>
+                                       value="{{ old('wan_ip', $router->wan_ip) }}" placeholder="e.g. 41.215.10.5 (optional)">
+                                <div class="form-text">Public/WAN IP used for FreeRADIUS NAS registration and Winbox/Web links.</div>
                                 @error('wan_ip')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">VPN IP / Management IP</label>
+                                <input type="text" name="vpn_ip" class="form-control @error('vpn_ip') is-invalid @enderror"
+                                       value="{{ old('vpn_ip', $router->vpn_ip) }}" placeholder="e.g. 10.0.0.1 (optional)">
+                                <div class="form-text">IP tunnel/VPN address for API connectivity. Takes priority over WAN IP for API calls.</div>
+                                @error('vpn_ip')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">RADIUS Secret <span class="text-danger">*</span></label>
