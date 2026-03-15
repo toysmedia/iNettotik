@@ -33,14 +33,17 @@ class MikrotikScriptService
         $lines[] = "/system identity set name=\"{$routerName}\"";
         $lines[] = '';
 
-        // Bridge / Customer Interface creation
+        // Bridge / Customer Interface creation — auto-create if missing
         $lines[] = '# --- Customer Interface (Bridge) ---';
-        $lines[] = "# Ensure the customer interface '{$customerIface}' exists.";
-        $lines[] = "# If it does not exist, uncomment the lines below and adjust port assignments.";
-        $lines[] = "# :if ([:len [/interface bridge find name=\"{$customerIface}\"]] = 0) do={";
-        $lines[] = "#   /interface bridge add name=\"{$customerIface}\" comment=\"Customer Bridge\" disabled=no";
-        $lines[] = "#   /interface bridge port add bridge=\"{$customerIface}\" interface=ether2";
-        $lines[] = "# }";
+        $lines[] = "# Auto-create bridge '{$customerIface}' if it does not exist";
+        $lines[] = ":if ([:len [/interface bridge find name=\"{$customerIface}\"]] = 0) do={";
+        $lines[] = "  /interface bridge add name=\"{$customerIface}\" comment=\"Customer Bridge - iNettotik\" disabled=no";
+        $lines[] = "}";
+        $lines[] = "# NOTE: Add your customer-facing ethernet ports to the bridge manually:";
+        $lines[] = "# /interface bridge port add bridge=\"{$customerIface}\" interface=ether2";
+        $lines[] = "# /interface bridge port add bridge=\"{$customerIface}\" interface=ether3";
+        $lines[] = "# /interface bridge port add bridge=\"{$customerIface}\" interface=ether4";
+        $lines[] = "# /interface bridge port add bridge=\"{$customerIface}\" interface=ether5";
         $lines[] = '';
 
         // RADIUS client — nas-identifier is NOT supported in RouterOS v7; use /system identity instead
@@ -70,14 +73,11 @@ class MikrotikScriptService
         $lines[] = "/interface pppoe-server server add interface={$customerIface} service-name=\"pppoe-service\" default-profile=\"pppoe-radius\" authentication=mschap2,mschap1,chap,pap one-session-per-host=yes disabled=no";
         $lines[] = '';
 
-        // Hotspot Setup — omit rate-limit and radius-default-domain when empty
+        // Hotspot Setup — omit rate-limit and radius-default-domain
         $hotspotProfileCmd  = "/ip hotspot profile add name=\"hsprof-radius\"";
         $hotspotProfileCmd .= " hotspot-address=192.168.2.1 dns-name=\"{$billingDomain}\"";
         $hotspotProfileCmd .= " use-radius=yes radius-location-id=\"{$routerName}\"";
         $hotspotProfileCmd .= " login-by=http-pap,http-chap http-cookie-lifetime=1d";
-        if (!empty($billingDomain)) {
-            $hotspotProfileCmd .= " radius-default-domain=\"{$billingDomain}\"";
-        }
         $lines[] = '# --- Hotspot Server ---';
         $lines[] = "/ip hotspot remove [find interface=\"{$customerIface}\"]";
         $lines[] = "/ip hotspot profile remove [find name=\"hsprof-radius\"]";
@@ -135,6 +135,8 @@ class MikrotikScriptService
             foreach ($mgmtIpList as $ip) {
                 $lines[] = "/ip firewall address-list add list=\"mgmt-allowed\" address={$ip} comment=\"Management\"";
             }
+            // Also add the RADIUS/billing server IP to the allowed list
+            $lines[] = "/ip firewall address-list add list=\"mgmt-allowed\" address={$radiusIp} comment=\"Billing Server\"";
             $lines[] = '/ip firewall filter remove [find comment="ISP-MGMT-ALLOW"]';
             $lines[] = '/ip firewall filter add chain=input src-address-list=mgmt-allowed action=accept place-before=0 comment="ISP-MGMT-ALLOW"';
             $lines[] = '/ip firewall filter remove [find comment="ISP-MGMT-DROP"]';
@@ -153,6 +155,8 @@ class MikrotikScriptService
 
         // NTP
         $lines[] = '# --- NTP Client ---';
+        $lines[] = '# NOTE: RouterOS v6 uses: /system ntp client set enabled=yes primary-ntp=216.239.35.0 secondary-ntp=216.239.35.4';
+        $lines[] = '# The commands below use RouterOS v7 syntax:';
         $lines[] = '/system ntp client set enabled=yes';
         $lines[] = '/system ntp client servers add address=216.239.35.0';
         $lines[] = '/system ntp client servers add address=216.239.35.4';
