@@ -14,6 +14,14 @@ use App\Http\Controllers\Admin\SettingController;
 use App\Http\Controllers\Admin\SmsController;
 use App\Http\Controllers\Admin\PaymentController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\DashboardController as IspDashboardController;
+use App\Http\Controllers\Admin\RouterController;
+use App\Http\Controllers\Admin\IspPackageController;
+use App\Http\Controllers\Admin\SubscriberController;
+use App\Http\Controllers\Admin\SessionController;
+use App\Http\Controllers\Admin\IspPaymentController;
+use App\Http\Controllers\Admin\IspSettingController;
+use App\Http\Controllers\Admin\IspResellerController;
 
 Route::middleware(['is_installed'])->group(function () {
 
@@ -146,6 +154,73 @@ Route::middleware(['is_installed'])->group(function () {
                 Route::post('/bulk-payment-process', 'bulkPaymentProcess')->name('bulk_payment_process');
                 Route::post('/grace-payment', 'gracePayment')->name('grace_payment');
             });
+        });
+
+        // ISP Dashboard
+        Route::get('/isp/dashboard', [IspDashboardController::class, 'index'])->name('isp.dashboard');
+
+        // Routers
+        Route::prefix('isp/routers')->name('isp.routers.')->controller(RouterController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('/{router}', 'show')->name('show');
+            Route::get('/{router}/edit', 'edit')->name('edit');
+            Route::put('/{router}', 'update')->name('update');
+            Route::delete('/{router}', 'destroy')->name('destroy');
+            Route::get('/{router}/script', 'script')->name('script');
+            Route::get('/{router}/download-script', 'downloadScript')->name('download_script');
+            Route::get('/{router}/hotspot-files', 'downloadHotspotFiles')->name('hotspot_files');
+        });
+
+        // ISP Packages
+        Route::prefix('isp/packages')->name('isp.packages.')->controller(IspPackageController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('/{ispPackage}/edit', 'edit')->name('edit');
+            Route::put('/{ispPackage}', 'update')->name('update');
+            Route::delete('/{ispPackage}', 'destroy')->name('destroy');
+        });
+
+        // Subscribers
+        Route::prefix('isp/subscribers')->name('isp.subscribers.')->controller(SubscriberController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('/{subscriber}', 'show')->name('show');
+            Route::get('/{subscriber}/edit', 'edit')->name('edit');
+            Route::put('/{subscriber}', 'update')->name('update');
+            Route::delete('/{subscriber}', 'destroy')->name('destroy');
+            Route::post('/bulk', 'bulkAction')->name('bulk');
+        });
+
+        // Live Sessions
+        Route::prefix('isp/sessions')->name('isp.sessions.')->controller(SessionController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/{id}/disconnect', 'disconnect')->name('disconnect');
+        });
+
+        // ISP Payments
+        Route::prefix('isp/payments')->name('isp.payments.')->controller(IspPaymentController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/export', 'export')->name('export');
+        });
+
+        // ISP Settings
+        Route::prefix('isp/settings')->name('isp.settings.')->controller(IspSettingController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::post('/', 'update')->name('update');
+        });
+
+        // Resellers
+        Route::prefix('isp/resellers')->name('isp.resellers.')->controller(IspResellerController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('/{reseller}/edit', 'edit')->name('edit');
+            Route::put('/{reseller}', 'update')->name('update');
+            Route::delete('/{reseller}', 'destroy')->name('destroy');
         });
 
 

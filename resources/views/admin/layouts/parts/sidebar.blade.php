@@ -97,6 +97,66 @@
 
 
         <li class="menu-header small text-uppercase">
+            <span class="menu-header-text">ISP Billing</span>
+        </li>
+
+        <li class="menu-item {{ is_active_menu('admin.isp.dashboard') }}">
+            <a href="{{ route('admin.isp.dashboard') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-tachometer"></i>
+                <div class="text-truncate">ISP Dashboard</div>
+            </a>
+        </li>
+
+        <li class="menu-item {{ is_active_menu('admin.isp.routers.', true) }}">
+            <a href="{{ route('admin.isp.routers.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-router"></i>
+                <div class="text-truncate">Routers</div>
+            </a>
+        </li>
+
+        <li class="menu-item {{ is_active_menu('admin.isp.packages.', true) }}">
+            <a href="{{ route('admin.isp.packages.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-package"></i>
+                <div class="text-truncate">ISP Packages</div>
+            </a>
+        </li>
+
+        <li class="menu-item {{ is_active_menu('admin.isp.subscribers.', true) }}">
+            <a href="{{ route('admin.isp.subscribers.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-group"></i>
+                <div class="text-truncate">Subscribers</div>
+            </a>
+        </li>
+
+        <li class="menu-item {{ is_active_menu('admin.isp.sessions.', true) }}">
+            <a href="{{ route('admin.isp.sessions.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-wifi"></i>
+                <div class="text-truncate">Live Sessions</div>
+            </a>
+        </li>
+
+        <li class="menu-item {{ is_active_menu('admin.isp.payments.', true) }}">
+            <a href="{{ route('admin.isp.payments.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-money-withdraw"></i>
+                <div class="text-truncate">M-Pesa Payments</div>
+            </a>
+        </li>
+
+        <li class="menu-item {{ is_active_menu('admin.isp.resellers.', true) }}">
+            <a href="{{ route('admin.isp.resellers.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-store"></i>
+                <div class="text-truncate">Resellers</div>
+            </a>
+        </li>
+
+        <li class="menu-item {{ is_active_menu('admin.isp.settings.', true) }}">
+            <a href="{{ route('admin.isp.settings.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-cog"></i>
+                <div class="text-truncate">ISP Settings</div>
+            </a>
+        </li>
+
+        <li class="menu-header small text-uppercase">
             <span class="menu-header-text">Configuration</span>
         </li>
 

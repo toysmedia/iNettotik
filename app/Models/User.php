@@ -172,4 +172,9 @@ class User extends Authenticatable
     {
         return self::whereIn('id', $user_ids)->get();
     }
+
+    public function reseller()
+    {
+        return $this->hasOne(\App\Models\Reseller::class);
+    }
 }
