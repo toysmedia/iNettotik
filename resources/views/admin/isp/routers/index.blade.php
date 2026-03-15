@@ -54,8 +54,9 @@
                                 <th>IDENTITY</th>
                                 <th>MODEL</th>
                                 <th>VERSION</th>
-                                <th>VPN IP</th>
+                                <th>WAN / VPN IP</th>
                                 <th>STATUS</th>
+                                <th>CONNECTION</th>
                                 <th>WEB</th>
                                 <th>WINBOX</th>
                                 <th class="text-center">Actions</th>
@@ -69,12 +70,27 @@
                                 <td><strong>{{ $router->name }}</strong></td>
                                 <td>{{ $router->model ?? '-' }}</td>
                                 <td>{{ $router->routeros_version ?? '-' }}</td>
-                                <td>{{ $router->vpn_ip ?? '-' }}</td>
+                                <td>{{ $router->vpn_ip ?? ($router->wan_ip ?? '-') }}</td>
                                 <td>
                                     @if($router->is_active)
                                         <span class="badge bg-label-success">Active</span>
                                     @else
                                         <span class="badge bg-label-secondary">Inactive</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    @php $connIp = $router->vpn_ip ?: $router->wan_ip; @endphp
+                                    @if($connIp)
+                                        <span class="connection-badge" id="conn-{{ $router->id }}"
+                                              data-url="{{ route('admin.isp.routers.test_connection', $router) }}"
+                                              data-router-id="{{ $router->id }}">
+                                            <span class="badge bg-label-secondary">
+                                                <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+                                                Checking…
+                                            </span>
+                                        </span>
+                                    @else
+                                        <span class="badge bg-label-secondary">No IP</span>
                                     @endif
                                 </td>
                                 <td class="text-center">
@@ -141,7 +157,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="10" class="text-center py-4 text-muted">
+                                <td colspan="11" class="text-center py-4 text-muted">
                                     No routers found. <a href="{{ route('admin.isp.routers.create') }}">Add one now.</a>
                                 </td>
                             </tr>
@@ -180,9 +196,46 @@ $(function () {
     $('#routersTable').DataTable({
         pageLength: 25,
         order: [[1, 'asc']],
-        columnDefs: [{ orderable: false, targets: [7, 8, 9] }]
+        columnDefs: [{ orderable: false, targets: [7, 8, 9, 10] }]
     });
+
+    // Initial connection check + auto-refresh every 30 seconds
+    checkAllConnectionStatuses();
+    setInterval(checkAllConnectionStatuses, 30000);
 });
+
+function checkAllConnectionStatuses() {
+    $('.connection-badge[data-url]').each(function () {
+        var $badge = $(this);
+        var url    = $badge.data('url');
+        var e = function(s) {
+            return $('<div>').text(s != null ? String(s) : '').html();
+        };
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: { _token: $('meta[name="csrf-token"]').attr('content') },
+            success: function (res) {
+                if (res.api_reachable) {
+                    var label = '<span class="badge bg-label-success"><i class="bx bx-check-circle me-1"></i>Online</span>';
+                    if (res.version) {
+                        label += '<br><small class="text-muted">' + e(res.version) + '</small>';
+                    }
+                    if (res.uptime) {
+                        label += '<br><small class="text-muted">' + e(res.uptime) + '</small>';
+                    }
+                    $badge.html(label);
+                } else {
+                    var errTip = res.error ? e(res.error) : 'Unreachable';
+                    $badge.html('<span class="badge bg-label-danger" title="' + errTip + '"><i class="bx bx-x-circle me-1"></i>Offline</span>');
+                }
+            },
+            error: function () {
+                $badge.html('<span class="badge bg-label-danger"><i class="bx bx-x-circle me-1"></i>Offline</span>');
+            }
+        });
+    });
+}
 
 function testConnection(routerId, routerName, url) {
     $('#testConnModalLabel').text('Test Connection — ' + routerName);
