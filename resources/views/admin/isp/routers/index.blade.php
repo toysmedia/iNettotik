@@ -55,7 +55,8 @@
                                 <th>MODEL</th>
                                 <th>VERSION</th>
                                 <th>VPN IP</th>
-                                <th>STATUS</th>
+                                <th>ACTIVE</th>
+                                <th>CONNECTION</th>
                                 <th>WEB</th>
                                 <th>WINBOX</th>
                                 <th class="text-center">Actions</th>
@@ -75,6 +76,13 @@
                                         <span class="badge bg-label-success">Active</span>
                                     @else
                                         <span class="badge bg-label-secondary">Inactive</span>
+                                    @endif
+                                </td>
+                                <td id="conn-status-{{ $router->id }}">
+                                    @if(!$router->wan_ip && !$router->vpn_ip)
+                                        <span class="badge bg-secondary">⚫ No IP</span>
+                                    @else
+                                        <span class="badge bg-secondary"><span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Checking…</span>
                                     @endif
                                 </td>
                                 <td class="text-center">
@@ -180,8 +188,61 @@ $(function () {
     $('#routersTable').DataTable({
         pageLength: 25,
         order: [[1, 'asc']],
-        columnDefs: [{ orderable: false, targets: [7, 8, 9] }]
+        columnDefs: [{ orderable: false, targets: [7, 8, 9, 10] }]
     });
+
+    // Initialise Bootstrap tooltips
+    $('[data-bs-toggle="tooltip"]').tooltip();
+
+    // Status polling — build map of routers that have an IP configured
+    var routerStatusTargets = [
+        @foreach($routers as $router)
+        @if($router->wan_ip || $router->vpn_ip)
+        { id: {{ $router->id }}, url: '{{ route('admin.isp.routers.test_connection', $router) }}' },
+        @endif
+        @endforeach
+    ];
+
+    function checkRouterStatus(router) {
+        $.ajax({
+            url: router.url,
+            type: 'POST',
+            data: { _token: $('meta[name="csrf-token"]').attr('content') },
+            success: function(res) {
+                var cell = $('#conn-status-' + router.id);
+                var escHtml = function(s) { return $('<div>').text(s != null ? String(s) : '').html(); };
+                if (res.api_reachable) {
+                    var parts = [];
+                    if (res.version) parts.push('v' + res.version);
+                    if (res.uptime)  parts.push('Up: ' + res.uptime);
+                    var tooltip = parts.join(' | ');
+                    var badge = '<span class="badge bg-success" style="cursor:default"' +
+                        (tooltip ? ' data-bs-toggle="tooltip" data-bs-placement="top" title="' + escHtml(tooltip) + '"' : '') +
+                        '>🟢 Online</span>';
+                    if (res.version || res.uptime) {
+                        badge += '<br><small class="text-muted">' + escHtml(parts.join(' | ')) + '</small>';
+                    }
+                    cell.html(badge);
+                    cell.find('[data-bs-toggle="tooltip"]').tooltip();
+                } else {
+                    var errTip = res.error ? ' data-bs-toggle="tooltip" data-bs-placement="top" title="' + escHtml(res.error) + '"' : '';
+                    cell.html('<span class="badge bg-danger" style="cursor:default"' + errTip + '>🔴 Offline</span>');
+                    cell.find('[data-bs-toggle="tooltip"]').tooltip();
+                }
+            },
+            error: function() {
+                $('#conn-status-' + router.id).html('<span class="badge bg-danger">🔴 Error</span>');
+            }
+        });
+    }
+
+    // Initial load: check all routers with IPs
+    routerStatusTargets.forEach(function(r) { checkRouterStatus(r); });
+
+    // Auto-refresh every 30 seconds
+    var statusRefreshInterval = setInterval(function() {
+        routerStatusTargets.forEach(function(r) { checkRouterStatus(r); });
+    }, 30000);
 });
 
 function testConnection(routerId, routerName, url) {
