@@ -23,6 +23,9 @@
                 <a href="{{ route('admin.isp.routers.hotspot_files', $router) }}" class="btn btn-secondary">
                     <i class="bx bx-download me-1"></i> Hotspot Files
                 </a>
+                <button type="button" class="btn btn-success" onclick="testConnection()">
+                    <i class="bx bx-broadcast me-1"></i> Test Connection
+                </button>
                 <a href="{{ route('admin.isp.routers.edit', $router) }}" class="btn btn-primary">
                     <i class="bx bx-edit me-1"></i> Edit
                 </a>
@@ -132,6 +135,23 @@
         </div>
     </div>
 </div>
+
+{{-- Test Connection Modal --}}
+<div class="modal fade" id="testConnModal" tabindex="-1" aria-labelledby="testConnModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="testConnModalLabel">Test Connection — {{ $router->name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="testConnBody">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @push('scripts')
@@ -149,6 +169,60 @@ function toggleSecret() {
         value.classList.add('d-none');
         btn.textContent = 'Show';
     }
+}
+
+function testConnection() {
+    $('#testConnBody').html('<div class="text-center py-3"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Testing...</span></div><p class="mt-2 text-muted">Connecting to router…</p></div>');
+    var modal = new bootstrap.Modal(document.getElementById('testConnModal'));
+    modal.show();
+
+    $.ajax({
+        url: '{{ route('admin.isp.routers.test_connection', $router) }}',
+        type: 'POST',
+        data: { _token: $('meta[name="csrf-token"]').attr('content') },
+        success: function(res) {
+            var e = function(s) {
+                return $('<div>').text(s != null ? String(s) : '').html();
+            };
+            var html = '<ul class="list-group">';
+            html += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+                  + '<span><i class="bx bx-wifi me-2"></i>API Reachable</span>'
+                  + (res.api_reachable
+                      ? '<span class="badge bg-success">Yes</span>'
+                      : '<span class="badge bg-danger">No</span>')
+                  + '</li>';
+            html += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+                  + '<span><i class="bx bx-server me-2"></i>RADIUS Configured</span>'
+                  + (res.radius_configured
+                      ? '<span class="badge bg-success">Yes</span>'
+                      : '<span class="badge bg-warning text-dark">Not in NAS table</span>')
+                  + '</li>';
+            if (res.router_identity) {
+                html += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+                      + '<span><i class="bx bx-chip me-2"></i>Board</span>'
+                      + '<span class="text-muted">' + e(res.router_identity) + '</span></li>';
+            }
+            if (res.version) {
+                html += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+                      + '<span><i class="bx bx-code-alt me-2"></i>RouterOS</span>'
+                      + '<span class="text-muted">' + e(res.version) + '</span></li>';
+            }
+            if (res.uptime) {
+                html += '<li class="list-group-item d-flex justify-content-between align-items-center">'
+                      + '<span><i class="bx bx-time me-2"></i>Uptime</span>'
+                      + '<span class="text-muted">' + e(res.uptime) + '</span></li>';
+            }
+            html += '</ul>';
+            if (res.error) {
+                html += '<div class="alert alert-warning mt-3 mb-0"><i class="bx bx-info-circle me-1"></i>' + e(res.error) + '</div>';
+            }
+            $('#testConnBody').html(html);
+        },
+        error: function(xhr) {
+            var msg = (xhr.responseJSON && xhr.responseJSON.message) ? xhr.responseJSON.message : 'Unknown error';
+            $('#testConnBody').html('<div class="alert alert-danger mb-0"><i class="bx bx-error me-1"></i>Request failed: ' + $('<div>').text(msg).html() + '</div>');
+        }
+    });
 }
 </script>
 @endpush

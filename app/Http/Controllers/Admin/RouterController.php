@@ -9,6 +9,7 @@ use App\Models\IspSetting;
 use App\Services\MikrotikScriptService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Http;
 use ZipArchive;
 
 class RouterController extends Controller
@@ -153,6 +154,54 @@ class RouterController extends Controller
         return response()->download($zipPath, "hotspot-files-{$router->id}.zip", [
             'Content-Type' => 'application/zip',
         ])->deleteFileAfterSend(true);
+    }
+
+    public function testConnection(Router $router)
+    {
+        $result = [
+            'api_reachable'      => false,
+            'radius_configured'  => false,
+            'router_identity'    => null,
+            'uptime'             => null,
+            'version'            => null,
+            'error'              => null,
+        ];
+
+        // Check NAS / RADIUS configuration
+        $result['radius_configured'] = Nas::where('nasname', $router->wan_ip)->exists();
+
+        // Try to reach RouterOS REST API
+        $ip      = $router->vpn_ip ?: $router->wan_ip;
+        $apiPort = $router->api_port ?? 80;
+        $apiUser = $router->api_username ?? 'admin';
+        $apiPass = $router->api_password ?? '';
+
+        if (!$ip) {
+            $result['error'] = 'No IP address configured for this router (set WAN IP or VPN IP).';
+            return response()->json($result);
+        }
+
+        try {
+            $scheme   = ($apiPort == 443) ? 'https' : 'http';
+            $url      = "{$scheme}://{$ip}:{$apiPort}/rest/system/resource";
+            $response = Http::withBasicAuth($apiUser, $apiPass)
+                ->timeout(5)
+                ->get($url);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $result['api_reachable']   = true;
+                $result['router_identity'] = $data['board-name'] ?? null;
+                $result['uptime']          = $data['uptime'] ?? null;
+                $result['version']         = $data['version'] ?? null;
+            } else {
+                $result['error'] = 'API responded with HTTP ' . $response->status() . '. Check credentials or API port.';
+            }
+        } catch (\Exception $e) {
+            $result['error'] = 'Could not connect to router API: ' . $e->getMessage();
+        }
+
+        return response()->json($result);
     }
 
     protected function syncNas(Router $router): void

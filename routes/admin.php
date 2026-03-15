@@ -171,6 +171,7 @@ Route::middleware(['is_installed'])->group(function () {
             Route::get('/{router}/script', 'script')->name('script');
             Route::get('/{router}/download-script', 'downloadScript')->name('download_script');
             Route::get('/{router}/hotspot-files', 'downloadHotspotFiles')->name('hotspot_files');
+            Route::post('/{router}/test-connection', 'testConnection')->name('test_connection');
         });
 
         // ISP Packages
