@@ -7,6 +7,7 @@ use App\Models\Nas;
 use App\Models\AuditLog;
 use App\Services\MikrotikScriptService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use ZipArchive;
 
 class RouterController extends Controller
@@ -105,6 +106,64 @@ class RouterController extends Controller
         return response($script, 200, [
             'Content-Type'        => 'text/plain',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+        ]);
+    }
+
+    public function testConnection(Router $router)
+    {
+        $host     = $router->vpn_ip ?: $router->wan_ip;
+        $port     = $router->api_port ?? 80;
+        $username = $router->api_username ?? 'admin';
+        $password = $router->api_password ?? '';
+
+        $apiReachable   = false;
+        $routerIdentity = null;
+        $uptime         = null;
+        $version        = null;
+        $error          = null;
+
+        try {
+            $url      = "http://{$host}:{$port}/rest/system/resource";
+            $response = Http::withBasicAuth($username, $password)
+                ->timeout(5)
+                ->get($url);
+
+            if ($response->successful()) {
+                $apiReachable   = true;
+                $data           = $response->json();
+                $uptime         = $data['uptime'] ?? null;
+                $version        = $data['version'] ?? null;
+            } else {
+                $error = 'HTTP ' . $response->status() . ': ' . $response->reason();
+            }
+        } catch (\Exception $e) {
+            $error = $e->getMessage();
+        }
+
+        // Check for router identity via REST if reachable
+        if ($apiReachable) {
+            try {
+                $idResp = Http::withBasicAuth($username, $password)
+                    ->timeout(5)
+                    ->get("http://{$host}:{$port}/rest/system/identity");
+                if ($idResp->successful()) {
+                    $routerIdentity = $idResp->json('name');
+                }
+            } catch (\Exception $e) {
+                // ignore — identity is optional
+            }
+        }
+
+        // Check NAS table for RADIUS configuration
+        $radiusConfigured = Nas::where('nasname', $router->wan_ip)->exists();
+
+        return response()->json([
+            'api_reachable'    => $apiReachable,
+            'radius_configured' => $radiusConfigured,
+            'router_identity'  => $routerIdentity,
+            'uptime'           => $uptime,
+            'version'          => $version,
+            'error'            => $error,
         ]);
     }
 
