@@ -69,5 +69,6 @@ class Kernel extends HttpKernel
         'is_installed' => \App\Http\Middleware\IsInstalled::class,
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
         'reseller' => \App\Http\Middleware\ResellerMiddleware::class,
+        'permission' => \App\Http\Middleware\CheckPermission::class,
     ];
 }

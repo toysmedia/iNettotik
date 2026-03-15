@@ -7,6 +7,7 @@ use App\Models\MpesaPayment;
 use App\Models\Radacct;
 use App\Models\IspPackage;
 use App\Models\Router;
+use App\Models\Expense;
 use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
@@ -45,9 +46,13 @@ class DashboardController extends Controller
 
         $pppoeExpiringToday = $expiringSubscribers->count();
 
+        // --- Expenses this month (10th card) ---
+        $totalExpensesMonth = Expense::whereYear('date', now()->year)
+            ->whereMonth('date', now()->month)
+            ->sum('amount');
+
         // --- Keep existing variables ---
         $activeSessions = Radacct::whereNull('acctstoptime')->count();
-
         $newToday = Subscriber::whereDate('created_at', today())->count();
 
         $recentPayments = MpesaPayment::with('package')
@@ -88,15 +93,37 @@ class DashboardController extends Controller
         $pieLabels = $sessionsByRouter->map(fn($r) => $routers[$r->nasipaddress] ?? $r->nasipaddress)->values();
         $pieData   = $sessionsByRouter->pluck('count')->values();
 
+        // Revenue vs Expenses (last 6 months)
+        $revVsExpLabels   = [];
+        $revVsExpRevenue  = [];
+        $revVsExpExpenses = [];
+        $revVsExpProfit   = [];
+        for ($i = 5; $i >= 0; $i--) {
+            $month = now()->subMonths($i);
+            $revVsExpLabels[]   = $month->format('M Y');
+            $rev = MpesaPayment::where('status', 'completed')
+                ->whereYear('created_at', $month->year)
+                ->whereMonth('created_at', $month->month)
+                ->sum('amount');
+            $exp = Expense::whereYear('date', $month->year)
+                ->whereMonth('date', $month->month)
+                ->sum('amount');
+            $revVsExpRevenue[]  = round($rev, 2);
+            $revVsExpExpenses[] = round($exp, 2);
+            $revVsExpProfit[]   = round($rev - $exp, 2);
+        }
+
         return view('admin.isp.dashboard', compact(
             'activePppoeUsers', 'activeHotspotUsers',
             'todayRevenuePppoe', 'todayRevenueHotspot',
             'totalRevenueMonth', 'newPppoeToday',
             'totalPppoeCustomers', 'totalHotspotCustomers',
             'pppoeExpiringToday', 'expiringSubscribers',
+            'totalExpensesMonth',
             'activeSessions', 'newToday',
             'recentPayments', 'recentSessions',
-            'chartLabels', 'chartData', 'pieLabels', 'pieData'
+            'chartLabels', 'chartData', 'pieLabels', 'pieData',
+            'revVsExpLabels', 'revVsExpRevenue', 'revVsExpExpenses', 'revVsExpProfit'
         ));
     }
 }

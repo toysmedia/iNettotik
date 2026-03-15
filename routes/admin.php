@@ -244,6 +244,82 @@ Route::middleware(['is_installed'])->group(function () {
             Route::get('/revenue-summary', 'revenueSummary')->name('revenue_summary');
         });
 
+        // Messaging
+        Route::prefix('isp/messaging')->name('isp.messaging.')->controller(\App\Http\Controllers\Admin\MessagingController::class)->group(function () {
+            Route::get('/sms', 'sms')->name('sms');
+            Route::post('/sms/send', 'sendSms')->name('sms.send');
+            Route::post('/sms/bulk', 'bulkSms')->name('sms.bulk');
+            Route::get('/whatsapp', 'whatsapp')->name('whatsapp');
+            Route::post('/whatsapp/send', 'sendWhatsapp')->name('whatsapp.send');
+            Route::post('/whatsapp/bulk', 'bulkWhatsapp')->name('whatsapp.bulk');
+            Route::get('/email', 'email')->name('email');
+            Route::post('/email/send', 'sendEmail')->name('email.send');
+            Route::post('/email/bulk', 'bulkEmail')->name('email.bulk');
+            Route::get('/logs', 'logs')->name('logs');
+        });
+
+        // Expenses
+        Route::prefix('isp/expenses')->name('isp.expenses.')->controller(\App\Http\Controllers\Admin\ExpenseController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('/report', 'report')->name('report');
+            Route::get('/export', 'export')->name('export');
+            Route::get('/{expense}/edit', 'edit')->name('edit');
+            Route::put('/{expense}', 'update')->name('update');
+            Route::delete('/{expense}', 'destroy')->name('destroy');
+        });
+
+        // Expense Categories
+        Route::prefix('isp/expense-categories')->name('isp.expense_categories.')->controller(\App\Http\Controllers\Admin\ExpenseCategoryController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('/{expenseCategory}/edit', 'edit')->name('edit');
+            Route::put('/{expenseCategory}', 'update')->name('update');
+            Route::delete('/{expenseCategory}', 'destroy')->name('destroy');
+        });
+
+        // Subscriber PPPoE/Hotspot filtered views + usage data
+        Route::get('/isp/subscribers/pppoe', [\App\Http\Controllers\Admin\SubscriberController::class, 'pppoe'])->name('isp.subscribers.pppoe');
+        Route::get('/isp/subscribers/hotspot', [\App\Http\Controllers\Admin\SubscriberController::class, 'hotspot'])->name('isp.subscribers.hotspot');
+        Route::get('/isp/subscribers/{subscriber}/usage-data', [\App\Http\Controllers\Admin\SubscriberController::class, 'usageData'])->name('isp.subscribers.usage_data');
+
+        // Access Control - Roles
+        Route::prefix('isp/access/roles')->name('isp.access.roles.')->controller(\App\Http\Controllers\Admin\RoleController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('/{role}/edit', 'edit')->name('edit');
+            Route::put('/{role}', 'update')->name('update');
+            Route::delete('/{role}', 'destroy')->name('destroy');
+        });
+
+        // Access Control - Workers
+        Route::prefix('isp/access/users')->name('isp.access.users.')->controller(\App\Http\Controllers\Admin\WorkerController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/create', 'create')->name('create');
+            Route::post('/', 'store')->name('store');
+            Route::get('/{worker}/edit', 'edit')->name('edit');
+            Route::put('/{worker}', 'update')->name('update');
+            Route::delete('/{worker}', 'destroy')->name('destroy');
+        });
+
+        // Maps
+        Route::prefix('isp/maps')->name('isp.maps.')->controller(\App\Http\Controllers\Admin\MapController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/data', 'data')->name('data');
+            Route::post('/locations', 'storeLocation')->name('locations.store');
+            Route::put('/locations/{location}', 'updateLocation')->name('locations.update');
+            Route::delete('/locations/{location}', 'destroyLocation')->name('locations.destroy');
+        });
+
+        // MikroTik Monitor
+        Route::prefix('isp/mikrotik-monitor')->name('isp.mikrotik_monitor.')->controller(\App\Http\Controllers\Admin\MikrotikMonitorController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/{router}', 'show')->name('show');
+            Route::get('/{router}/data', 'getData')->name('data');
+        });
 
     });
 
