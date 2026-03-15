@@ -2,12 +2,18 @@
 @section('title', 'ISP Dashboard')
 
 @push('styles')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
 <style>
-    .stat-card { border-left: 4px solid; }
-    .stat-card.primary { border-left-color: #696cff; }
-    .stat-card.success { border-left-color: #71dd37; }
-    .stat-card.warning { border-left-color: #ffab00; }
-    .stat-card.info { border-left-color: #03c3ec; }
+    .stat-card { border-left: 4px solid; transition: transform .15s; }
+    .stat-card:hover { transform: translateY(-2px); }
+    .stat-card.green   { border-left-color: #71dd37; }
+    .stat-card.blue    { border-left-color: #03c3ec; }
+    .stat-card.purple  { border-left-color: #696cff; }
+    .stat-card.teal    { border-left-color: #20c997; }
+    .stat-card.indigo  { border-left-color: #6366f1; }
+    .stat-card.orange  { border-left-color: #fd7e14; }
+    .stat-card.red     { border-left-color: #ff3e1d; }
+    .stat-icon { font-size: 2.2rem; opacity: .85; }
 </style>
 @endpush
 
@@ -23,67 +29,187 @@
         </nav>
     </div>
 
-    {{-- Summary Cards --}}
-    <div class="col-sm-3 mb-4">
-        <div class="card h-100 stat-card primary">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="mb-1 text-muted small">Active Subscribers</p>
-                        <h4 class="mb-0">{{ $activeSubscribers ?? 0 }}</h4>
-                    </div>
-                    <div class="text-primary"><i class="bx bx-user-check" style="font-size:2rem;"></i></div>
+    {{-- ========== 9 STAT CARDS ========== --}}
+    {{-- 1: Active PPPoE --}}
+    <div class="col-xl-4 col-md-6 col-12 mb-4">
+        <div class="card h-100 stat-card green">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1 text-muted small">Active PPPoE Users</p>
+                    <h4 class="mb-0 fw-bold">{{ $activePppoeUsers }}</h4>
                 </div>
+                <div class="text-success stat-icon"><i class="bx bx-user"></i></div>
             </div>
         </div>
     </div>
 
-    <div class="col-sm-3 mb-4">
-        <div class="card h-100 stat-card success">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="mb-1 text-muted small">Today's Revenue (KES)</p>
-                        <h4 class="mb-0">{{ number_format($todayRevenue ?? 0, 2) }}</h4>
-                    </div>
-                    <div class="text-success"><i class="bx bx-dollar-circle" style="font-size:2rem;"></i></div>
+    {{-- 2: Active Hotspot --}}
+    <div class="col-xl-4 col-md-6 col-12 mb-4">
+        <div class="card h-100 stat-card blue">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1 text-muted small">Active Hotspot Users</p>
+                    <h4 class="mb-0 fw-bold">{{ $activeHotspotUsers }}</h4>
                 </div>
+                <div class="text-info stat-icon"><i class="bx bx-wifi"></i></div>
             </div>
         </div>
     </div>
 
-    <div class="col-sm-3 mb-4">
-        <div class="card h-100 stat-card warning">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="mb-1 text-muted small">Active Sessions</p>
-                        <h4 class="mb-0">{{ $activeSessions ?? 0 }}</h4>
-                    </div>
-                    <div class="text-warning"><i class="bx bx-wifi" style="font-size:2rem;"></i></div>
+    {{-- 3: Today PPPoE Revenue --}}
+    <div class="col-xl-4 col-md-6 col-12 mb-4">
+        <div class="card h-100 stat-card green">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1 text-muted small">Today's Revenue (PPPoE)</p>
+                    <h4 class="mb-0 fw-bold">KES {{ number_format($todayRevenuePppoe, 2) }}</h4>
                 </div>
+                <div class="text-success stat-icon"><i class="bx bx-money"></i></div>
             </div>
         </div>
     </div>
 
-    <div class="col-sm-3 mb-4">
-        <div class="card h-100 stat-card info">
-            <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <p class="mb-1 text-muted small">New Today</p>
-                        <h4 class="mb-0">{{ $newToday ?? 0 }}</h4>
-                    </div>
-                    <div class="text-info"><i class="bx bx-user-plus" style="font-size:2rem;"></i></div>
+    {{-- 4: Today Hotspot Revenue --}}
+    <div class="col-xl-4 col-md-6 col-12 mb-4">
+        <div class="card h-100 stat-card blue">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1 text-muted small">Today's Revenue (Hotspot)</p>
+                    <h4 class="mb-0 fw-bold">KES {{ number_format($todayRevenueHotspot, 2) }}</h4>
                 </div>
+                <div class="text-info stat-icon"><i class="bx bx-money"></i></div>
             </div>
         </div>
     </div>
 
-    {{-- Revenue Chart --}}
+    {{-- 5: Total Revenue This Month --}}
+    <div class="col-xl-4 col-md-6 col-12 mb-4">
+        <div class="card h-100 stat-card purple">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1 text-muted small">Total Revenue This Month</p>
+                    <h4 class="mb-0 fw-bold">KES {{ number_format($totalRevenueMonth, 2) }}</h4>
+                </div>
+                <div class="text-primary stat-icon"><i class="bx bx-bar-chart"></i></div>
+            </div>
+        </div>
+    </div>
+
+    {{-- 6: New PPPoE Today --}}
+    <div class="col-xl-4 col-md-6 col-12 mb-4">
+        <div class="card h-100 stat-card teal">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1 text-muted small">New PPPoE Customers Today</p>
+                    <h4 class="mb-0 fw-bold">{{ $newPppoeToday }}</h4>
+                </div>
+                <div class="text-success stat-icon"><i class="bx bx-user-plus"></i></div>
+            </div>
+        </div>
+    </div>
+
+    {{-- 7: Total PPPoE --}}
+    <div class="col-xl-4 col-md-6 col-12 mb-4">
+        <div class="card h-100 stat-card indigo">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1 text-muted small">Total PPPoE Customers</p>
+                    <h4 class="mb-0 fw-bold">{{ $totalPppoeCustomers }}</h4>
+                </div>
+                <div class="text-primary stat-icon"><i class="bx bx-group"></i></div>
+            </div>
+        </div>
+    </div>
+
+    {{-- 8: Total Hotspot --}}
+    <div class="col-xl-4 col-md-6 col-12 mb-4">
+        <div class="card h-100 stat-card orange">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1 text-muted small">Total Hotspot Customers</p>
+                    <h4 class="mb-0 fw-bold">{{ $totalHotspotCustomers }}</h4>
+                </div>
+                <div class="text-warning stat-icon"><i class="bx bx-wifi-2"></i></div>
+            </div>
+        </div>
+    </div>
+
+    {{-- 9: PPPoE Expiring Today --}}
+    <div class="col-xl-4 col-md-6 col-12 mb-4">
+        <div class="card h-100 stat-card red">
+            <div class="card-body d-flex justify-content-between align-items-center">
+                <div>
+                    <p class="mb-1 text-muted small">PPPoE Expiring Today</p>
+                    <h4 class="mb-0 fw-bold {{ $pppoeExpiringToday > 0 ? 'text-danger' : '' }}">{{ $pppoeExpiringToday }}</h4>
+                </div>
+                <div class="text-danger stat-icon"><i class="bx bx-time"></i></div>
+            </div>
+        </div>
+    </div>
+
+    {{-- ========== EXPIRING TABLE ========== --}}
+    <div class="col-sm-12 mb-4">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bx bx-alarm-exclamation me-2 text-danger"></i>PPPoE Customers Expiring Today</h5>
+                @if($expiringSubscribers->isNotEmpty())
+                <span class="badge bg-danger">{{ $expiringSubscribers->count() }} expiring</span>
+                @endif
+            </div>
+            <div class="card-body p-0">
+                @if($expiringSubscribers->isEmpty())
+                <div class="text-center py-5 text-muted">
+                    <i class="bx bx-check-circle text-success" style="font-size:3rem;"></i>
+                    <p class="mt-2 mb-0">No PPPoE customers expiring today ✓</p>
+                </div>
+                @else
+                <div class="table-responsive">
+                    <table id="expiringTable" class="table table-sm table-hover mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>#</th>
+                                <th>Username</th>
+                                <th>Full Name</th>
+                                <th>Phone</th>
+                                <th>Package</th>
+                                <th>Expiry Date/Time</th>
+                                <th>Router</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($expiringSubscribers as $sub)
+                            <tr>
+                                <td>{{ $loop->iteration }}</td>
+                                <td><strong>{{ $sub->username }}</strong></td>
+                                <td>{{ $sub->full_name ?? '-' }}</td>
+                                <td>{{ $sub->phone ?? '-' }}</td>
+                                <td>{{ $sub->package->name ?? '-' }}</td>
+                                <td>
+                                    <span class="{{ $sub->expires_at->isPast() ? 'text-danger' : 'text-warning' }}">
+                                        {{ $sub->expires_at->format('d M Y H:i') }}
+                                    </span>
+                                </td>
+                                <td>{{ $sub->router->name ?? '-' }}</td>
+                                <td class="text-center">
+                                    <a href="{{ route('admin.isp.subscribers.edit', $sub) }}" class="btn btn-sm btn-success">
+                                        <i class="bx bx-refresh me-1"></i>Renew
+                                    </a>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
+
+    {{-- ========== CHARTS ========== --}}
     <div class="col-sm-8 mb-4">
         <div class="card h-100">
-            <div class="card-header d-flex justify-content-between align-items-center">
+            <div class="card-header">
                 <h5 class="mb-0">Revenue (Last 30 Days)</h5>
             </div>
             <div class="card-body">
@@ -92,11 +218,10 @@
         </div>
     </div>
 
-    {{-- Package Distribution --}}
     <div class="col-sm-4 mb-4">
         <div class="card h-100">
             <div class="card-header">
-                <h5 class="mb-0">Subscribers by Package</h5>
+                <h5 class="mb-0">Sessions by Router</h5>
             </div>
             <div class="card-body">
                 <canvas id="packageChart" height="200"></canvas>
@@ -104,7 +229,7 @@
         </div>
     </div>
 
-    {{-- Recent Payments --}}
+    {{-- ========== RECENT PAYMENTS ========== --}}
     <div class="col-sm-7 mb-4">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -116,24 +241,22 @@
                     <table class="table table-sm mb-0">
                         <thead class="table-light">
                             <tr>
-                                <th>Subscriber</th>
+                                <th>Phone</th>
                                 <th>Package</th>
                                 <th>Amount (KES)</th>
-                                <th>Method</th>
                                 <th>Time</th>
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($recentPayments ?? [] as $payment)
+                            @forelse($recentPayments as $payment)
                             <tr>
-                                <td>{{ $payment->subscriber->name ?? '-' }}</td>
+                                <td>{{ $payment->phone ?? '-' }}</td>
                                 <td>{{ $payment->package->name ?? '-' }}</td>
                                 <td>{{ number_format($payment->amount, 2) }}</td>
-                                <td><span class="badge bg-label-success">{{ $payment->payment_method ?? 'M-Pesa' }}</span></td>
                                 <td>{{ $payment->created_at->diffForHumans() }}</td>
                             </tr>
                             @empty
-                            <tr><td colspan="5" class="text-center py-3 text-muted">No payments today</td></tr>
+                            <tr><td colspan="4" class="text-center py-3 text-muted">No recent payments</td></tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -142,7 +265,7 @@
         </div>
     </div>
 
-    {{-- Recent Sessions --}}
+    {{-- ========== RECENT SESSIONS ========== --}}
     <div class="col-sm-5 mb-4">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
@@ -160,7 +283,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($recentSessions ?? [] as $session)
+                            @forelse($recentSessions as $session)
                             <tr>
                                 <td>{{ $session->username }}</td>
                                 <td>{{ $session->framedipaddress ?? '-' }}</td>
@@ -179,24 +302,30 @@
 @endsection
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-(function () {
-    const revenueLabels = @json($revenueChartLabels ?? []);
-    const revenueData   = @json($revenueChartData ?? []);
-    const packageLabels = @json($packageChartLabels ?? []);
-    const packageData   = @json($packageChartData ?? []);
+$(function () {
+    @if($expiringSubscribers->isNotEmpty())
+    $('#expiringTable').DataTable({ pageLength: 10, order: [[5, 'asc']] });
+    @endif
+
+    const chartLabels = @json($chartLabels);
+    const chartData   = @json($chartData);
+    const pieLabels   = @json($pieLabels);
+    const pieData     = @json($pieData);
 
     new Chart(document.getElementById('revenueChart'), {
         type: 'line',
         data: {
-            labels: revenueLabels,
+            labels: chartLabels,
             datasets: [{
                 label: 'Revenue (KES)',
-                data: revenueData,
+                data: chartData,
                 fill: true,
-                backgroundColor: 'rgba(105,108,255,0.15)',
-                borderColor: '#696cff',
+                backgroundColor: 'rgba(113,221,55,0.15)',
+                borderColor: '#71dd37',
                 tension: 0.4,
                 pointRadius: 3,
             }]
@@ -207,14 +336,14 @@
     new Chart(document.getElementById('packageChart'), {
         type: 'doughnut',
         data: {
-            labels: packageLabels,
+            labels: pieLabels.length ? pieLabels : ['No sessions'],
             datasets: [{
-                data: packageData,
-                backgroundColor: ['#696cff','#71dd37','#ffab00','#03c3ec','#ff3e1d','#20c997'],
+                data: pieData.length ? pieData : [1],
+                backgroundColor: ['#696cff','#71dd37','#ffab00','#03c3ec','#ff3e1d','#20c997','#fd7e14'],
             }]
         },
         options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
     });
-})();
+});
 </script>
 @endpush

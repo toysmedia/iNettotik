@@ -142,6 +142,54 @@
             </a>
         </li>
 
+        <li class="menu-item {{ is_active_menu('admin.isp.expired_pppoe.', true) }}">
+            <a href="{{ route('admin.isp.expired_pppoe.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-x-circle"></i>
+                <div class="text-truncate">Expired PPPoE</div>
+            </a>
+        </li>
+
+        <li class="menu-item {{ is_active_menu('admin.isp.ereceipts.', true) }}">
+            <a href="{{ route('admin.isp.ereceipts.index') }}" class="menu-link">
+                <i class="menu-icon tf-icons bx bx-receipt"></i>
+                <div class="text-truncate">e-Receipts</div>
+            </a>
+        </li>
+
+        <li class="menu-item {{ is_active_menu('admin.isp.reports.', true) }}">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                <i class="menu-icon tf-icons bx bx-line-chart"></i>
+                <div class="text-truncate">Reports</div>
+            </a>
+            <ul class="menu-sub">
+                <li class="menu-item {{ is_active_menu('admin.isp.reports.pppoe_sales') }}">
+                    <a href="{{ route('admin.isp.reports.pppoe_sales') }}" class="menu-link">
+                        <div class="text-truncate">PPPoE Sales Report</div>
+                    </a>
+                </li>
+                <li class="menu-item {{ is_active_menu('admin.isp.reports.hotspot_sales') }}">
+                    <a href="{{ route('admin.isp.reports.hotspot_sales') }}" class="menu-link">
+                        <div class="text-truncate">Hotspot Sales Report</div>
+                    </a>
+                </li>
+                <li class="menu-item {{ is_active_menu('admin.isp.reports.monthly_combined') }}">
+                    <a href="{{ route('admin.isp.reports.monthly_combined') }}" class="menu-link">
+                        <div class="text-truncate">Monthly Combined</div>
+                    </a>
+                </li>
+                <li class="menu-item {{ is_active_menu('admin.isp.reports.sales_by_package') }}">
+                    <a href="{{ route('admin.isp.reports.sales_by_package') }}" class="menu-link">
+                        <div class="text-truncate">Sales by Package</div>
+                    </a>
+                </li>
+                <li class="menu-item {{ is_active_menu('admin.isp.reports.revenue_summary') }}">
+                    <a href="{{ route('admin.isp.reports.revenue_summary') }}" class="menu-link">
+                        <div class="text-truncate">Revenue Summary</div>
+                    </a>
+                </li>
+            </ul>
+        </li>
+
         <li class="menu-item {{ is_active_menu('admin.isp.resellers.', true) }}">
             <a href="{{ route('admin.isp.resellers.index') }}" class="menu-link">
                 <i class="menu-icon tf-icons bx bx-store"></i>

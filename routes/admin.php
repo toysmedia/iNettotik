@@ -223,6 +223,27 @@ Route::middleware(['is_installed'])->group(function () {
             Route::delete('/{reseller}', 'destroy')->name('destroy');
         });
 
+        // Expired PPPoE
+        Route::prefix('isp/expired-pppoe')->name('isp.expired_pppoe.')->controller(\App\Http\Controllers\Admin\ExpiredPppoeController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/data', 'getData')->name('data');
+        });
+
+        // e-Receipts
+        Route::prefix('isp/e-receipts')->name('isp.ereceipts.')->controller(\App\Http\Controllers\Admin\EReceiptController::class)->group(function () {
+            Route::get('/', 'index')->name('index');
+            Route::get('/data', 'getData')->name('data');
+        });
+
+        // Reports
+        Route::prefix('isp/reports')->name('isp.reports.')->controller(\App\Http\Controllers\Admin\ReportController::class)->group(function () {
+            Route::get('/pppoe-sales', 'pppoeSales')->name('pppoe_sales');
+            Route::get('/hotspot-sales', 'hotspotSales')->name('hotspot_sales');
+            Route::get('/monthly-combined', 'monthlyCombined')->name('monthly_combined');
+            Route::get('/sales-by-package', 'salesByPackage')->name('sales_by_package');
+            Route::get('/revenue-summary', 'revenueSummary')->name('revenue_summary');
+        });
+
 
     });
 

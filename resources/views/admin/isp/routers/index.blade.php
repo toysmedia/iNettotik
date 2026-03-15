@@ -1,6 +1,10 @@
 @extends('admin.layouts.app')
 @section('title', 'Routers')
 
+@push('styles')
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/dataTables.bootstrap5.min.css">
+@endpush
+
 @section('content')
 <div class="row">
     <div class="col-sm-12 mb-3">
@@ -21,20 +25,39 @@
         </div>
     </div>
 
+    @if(session('success'))
+    <div class="col-sm-12 mb-3">
+        <div class="alert alert-success alert-dismissible" role="alert">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+    @endif
+    @if(session('error'))
+    <div class="col-sm-12 mb-3">
+        <div class="alert alert-danger alert-dismissible" role="alert">
+            {{ session('error') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    </div>
+    @endif
+
     <div class="col-sm-12">
         <div class="card">
             <div class="card-body p-0">
-                <div class="table-responsive text-nowrap">
-                    <table class="table table-bordered table-hover mb-0">
+                <div class="table-responsive">
+                    <table id="routersTable" class="table table-bordered table-hover mb-0">
                         <thead class="table-light">
                             <tr>
                                 <th>#</th>
-                                <th>Name</th>
-                                <th>WAN IP</th>
-                                <th>WAN Interface</th>
-                                <th>Customer Interface</th>
-                                <th>Billing Domain</th>
-                                <th>Status</th>
+                                <th>REF</th>
+                                <th>IDENTITY</th>
+                                <th>MODEL</th>
+                                <th>VERSION</th>
+                                <th>VPN IP</th>
+                                <th>STATUS</th>
+                                <th>WEB</th>
+                                <th>WINBOX</th>
                                 <th class="text-center">Actions</th>
                             </tr>
                         </thead>
@@ -42,11 +65,11 @@
                             @forelse($routers as $router)
                             <tr>
                                 <td>{{ $loop->iteration }}</td>
+                                <td><code>{{ $router->ref_code ?? 'RTR-' . str_pad($router->id, 3, '0', STR_PAD_LEFT) }}</code></td>
                                 <td><strong>{{ $router->name }}</strong></td>
-                                <td><code>{{ $router->wan_ip }}</code></td>
-                                <td>{{ $router->wan_interface }}</td>
-                                <td>{{ $router->customer_interface }}</td>
-                                <td>{{ $router->billing_domain ?? '-' }}</td>
+                                <td>{{ $router->model ?? '-' }}</td>
+                                <td>{{ $router->routeros_version ?? '-' }}</td>
+                                <td>{{ $router->vpn_ip ?? '-' }}</td>
                                 <td>
                                     @if($router->is_active)
                                         <span class="badge bg-label-success">Active</span>
@@ -55,42 +78,87 @@
                                     @endif
                                 </td>
                                 <td class="text-center">
-                                    <a href="{{ route('admin.isp.routers.show', $router) }}" class="btn btn-sm btn-outline-info me-1" title="View">
-                                        <i class="bx bx-show"></i>
-                                    </a>
-                                    <a href="{{ route('admin.isp.routers.edit', $router) }}" class="btn btn-sm btn-outline-primary me-1" title="Edit">
-                                        <i class="bx bx-edit"></i>
-                                    </a>
-                                    <a href="{{ route('admin.isp.routers.script', $router) }}" class="btn btn-sm btn-outline-warning me-1" title="Generate Script" target="_blank">
-                                        <i class="bx bx-code-alt"></i>
-                                    </a>
-                                    <a href="{{ route('admin.isp.routers.hotspot_files', $router) }}" class="btn btn-sm btn-outline-secondary me-1" title="Download Hotspot Files">
-                                        <i class="bx bx-download"></i>
-                                    </a>
-                                    <form action="{{ route('admin.isp.routers.destroy', $router) }}" method="POST" class="d-inline"
-                                          onsubmit="return confirm('Delete router {{ addslashes($router->name) }}? This cannot be undone.')">
-                                        @csrf @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
-                                            <i class="bx bx-trash"></i>
+                                    @if($router->wan_ip)
+                                        <a href="http://{{ $router->wan_ip }}" target="_blank" class="btn btn-sm btn-outline-info" title="Open Web UI">
+                                            <i class="bx bx-link-external"></i>
+                                        </a>
+                                    @else
+                                        <span class="text-muted small">N/A</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($router->wan_ip)
+                                        <code>winbox://{{ $router->wan_ip }}</code>
+                                    @else
+                                        <span class="text-muted small">N/A</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    <div class="dropdown">
+                                        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                            <i class="bx bx-dots-vertical-rounded"></i>
                                         </button>
-                                    </form>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li>
+                                                <a class="dropdown-item" href="{{ route('admin.isp.routers.edit', $router) }}">
+                                                    <i class="bx bx-edit me-2 text-primary"></i> Edit
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{{ route('admin.isp.routers.script', $router) }}" target="_blank">
+                                                    <i class="bx bx-code-alt me-2 text-warning"></i> Generate Script
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{{ route('admin.isp.routers.download_script', $router) }}">
+                                                    <i class="bx bx-download me-2 text-success"></i> Download Script
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{{ route('admin.isp.routers.hotspot_files', $router) }}">
+                                                    <i class="bx bx-wifi me-2 text-info"></i> Download Hotspot Files
+                                                </a>
+                                            </li>
+                                            <li><hr class="dropdown-divider"></li>
+                                            <li>
+                                                <form action="{{ route('admin.isp.routers.destroy', $router) }}" method="POST"
+                                                      onsubmit="return confirm('Delete router {{ addslashes($router->name) }}? This cannot be undone.')">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="dropdown-item text-danger">
+                                                        <i class="bx bx-trash me-2"></i> Delete
+                                                    </button>
+                                                </form>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </td>
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="8" class="text-center py-4 text-muted">No routers found. <a href="{{ route('admin.isp.routers.create') }}">Add one now.</a></td>
+                                <td colspan="10" class="text-center py-4 text-muted">
+                                    No routers found. <a href="{{ route('admin.isp.routers.create') }}">Add one now.</a>
+                                </td>
                             </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
-            @if($routers instanceof \Illuminate\Pagination\LengthAwarePaginator && $routers->hasPages())
-            <div class="card-footer d-flex justify-content-center">
-                {{ $routers->links() }}
-            </div>
-            @endif
         </div>
     </div>
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
+<script>
+$(function () {
+    $('#routersTable').DataTable({
+        pageLength: 25,
+        order: [[1, 'asc']],
+        columnDefs: [{ orderable: false, targets: [7, 8, 9] }]
+    });
+});
+</script>
+@endpush
