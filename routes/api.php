@@ -36,3 +36,7 @@ Route::get('/packages', [ApiPackageController::class, 'index']);
 
 // Check payment status
 Route::get('/check-payment/{ref}', [MpesaController::class, 'checkPayment']);
+
+// Router auto-registration callback (called from MikroTik script via /tool fetch)
+use App\Http\Controllers\Api\RouterCallbackController;
+Route::post('/router-callback', [RouterCallbackController::class, 'callback']);

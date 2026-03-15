@@ -49,10 +49,18 @@
                                 @error('name')<div class="invalid-feedback">{{ $message }}</div>@enderror
                             </div>
                             <div class="mb-3">
-                                <label class="form-label fw-semibold">WAN IP Address <span class="text-danger">*</span></label>
-                                <input type="text" name="wan_ip" class="form-control @error('wan_ip') is-invalid @enderror"
-                                       value="{{ old('wan_ip', $router->wan_ip) }}" required>
-                                @error('wan_ip')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                                <label class="form-label fw-semibold">WAN IP Address</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control bg-light" value="{{ $router->wan_ip ?? '' }}" readonly disabled>
+                                    <span class="input-group-text">
+                                        @if($router->wan_ip)
+                                            <span class="badge bg-success"><i class="bx bx-check me-1"></i>Auto-detected</span>
+                                        @else
+                                            <span class="badge bg-warning text-dark"><i class="bx bx-time me-1"></i>Awaiting Script</span>
+                                        @endif
+                                    </span>
+                                </div>
+                                <div class="form-text">Detected automatically when the MikroTik script runs.</div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">RADIUS Secret <span class="text-danger">*</span></label>
@@ -117,6 +125,61 @@
                         <div class="card-body">
                             <textarea name="notes" rows="3" class="form-control @error('notes') is-invalid @enderror">{{ old('notes', $router->notes) }}</textarea>
                             @error('notes')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                </div>
+
+                {{-- WireGuard Tunnel Info --}}
+                <div class="col-sm-12 mb-4">
+                    <div class="card border-info">
+                        <div class="card-header bg-info bg-opacity-10">
+                            <h6 class="mb-0"><i class="bx bx-shield-quarter me-2 text-info"></i>WireGuard Tunnel</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-sm-6">
+                                    <label class="form-label fw-semibold">Router VPN IP</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control bg-light" value="{{ $router->vpn_ip ?? '' }}" readonly disabled>
+                                        <span class="input-group-text">
+                                            @if($router->vpn_ip)
+                                                <span class="badge bg-success"><i class="bx bx-check me-1"></i>Auto-detected</span>
+                                            @else
+                                                <span class="badge bg-warning text-dark"><i class="bx bx-time me-1"></i>Pending Setup</span>
+                                            @endif
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <label class="form-label fw-semibold">Tunnel Status</label>
+                                    <div>
+                                        @if($router->wg_public_key)
+                                            <span class="badge bg-success fs-6"><i class="bx bx-lock me-1"></i>Connected</span>
+                                        @else
+                                            <span class="badge bg-secondary fs-6"><i class="bx bx-lock-open me-1"></i>Pending Setup</span>
+                                        @endif
+                                    </div>
+                                    <div class="form-text">Set when the MikroTik script runs and registers back.</div>
+                                </div>
+                                <div class="col-sm-12">
+                                    <label class="form-label fw-semibold">Router WG Public Key</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control bg-light font-monospace"
+                                               id="wgPubKeyField"
+                                               value="{{ $router->wg_public_key ?? '' }}"
+                                               readonly disabled
+                                               placeholder="Not yet registered — run the MikroTik script first">
+                                        @if($router->wg_public_key)
+                                        <button type="button" class="btn btn-outline-secondary"
+                                                onclick="(function(btn){var txt='{{ addslashes($router->wg_public_key ?? '') }}';if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(txt).then(function(){btn.innerHTML='<i class=\'bx bx-check\'></i> Copied';setTimeout(function(){btn.innerHTML='<i class=\'bx bx-copy\'></i>';},2000);}).catch(function(){});}else{var ta=document.createElement('textarea');ta.value=txt;document.body.appendChild(ta);ta.select();try{document.execCommand('copy');btn.innerHTML='<i class=\'bx bx-check\'></i> Copied';setTimeout(function(){btn.innerHTML='<i class=\'bx bx-copy\'></i>';},2000);}catch(e){}document.body.removeChild(ta);}})(this)"
+                                                title="Copy to clipboard">
+                                            <i class="bx bx-copy"></i>
+                                        </button>
+                                        @endif
+                                    </div>
+                                    <div class="form-text">Auto-populated when the router runs the generated script.</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
