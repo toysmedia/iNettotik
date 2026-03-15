@@ -22,9 +22,10 @@ class RouterCallbackController extends Controller
 
         // Find the router by name (sanitized the same way as in MikrotikScriptService)
         $sanitizedName = preg_replace('/[^a-zA-Z0-9\-]/', '-', $data['router_name']);
-        $router = Router::where('name', $data['router_name'])
-            ->orWhereRaw("REPLACE(REPLACE(name, ' ', '-'), '_', '-') = ?", [$sanitizedName])
-            ->first();
+        $router = Router::where(function ($q) use ($data, $sanitizedName) {
+            $q->where('name', $data['router_name'])
+              ->orWhereRaw("REPLACE(REPLACE(name, ' ', '-'), '_', '-') = ?", [$sanitizedName]);
+        })->first();
 
         if (!$router) {
             Log::warning('Router callback: no matching router found', $data);

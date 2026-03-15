@@ -163,7 +163,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="10" class="text-center py-4 text-muted">
+                                <td colspan="12" class="text-center py-4 text-muted">
                                     No routers found. <a href="{{ route('admin.isp.routers.create') }}">Add one now.</a>
                                 </td>
                             </tr>
