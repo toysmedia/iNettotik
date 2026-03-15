@@ -35,7 +35,7 @@ class MikrotikScriptService
         // RADIUS client
         $lines[] = '# --- RADIUS Client ---';
         $lines[] = '/radius remove [find]';
-        $lines[] = "/radius add address={$radiusIp} secret=\"{$nasSecret}\" service=ppp,hotspot,login nas-identifier=\"{$routerName}\"";
+        $lines[] = "/radius add address={$radiusIp} secret=\"{$nasSecret}\" service=ppp,hotspot,login";
         $lines[] = '/radius incoming set accept=yes port=3799';
         $lines[] = '';
 
@@ -50,7 +50,19 @@ class MikrotikScriptService
         // PPP Profiles
         $lines[] = '# --- PPP Profiles ---';
         $lines[] = '/ppp profile remove [find name="pppoe-radius"]';
-        $lines[] = '/ppp profile add name="pppoe-radius" use-radius=yes local-address=pppoe-pool remote-address=pppoe-pool rate-limit="" only-one=yes';
+        $lines[] = '/ppp profile add name="pppoe-radius" use-radius=yes local-address=pppoe-pool remote-address=pppoe-pool only-one=yes';
+        $lines[] = '';
+
+        // Bridge / Customer Interface creation
+        $custIface = $router->customer_interface;
+        $lines[] = '# --- Customer Interface (Bridge) Setup ---';
+        $lines[] = '# Create the customer-facing bridge if it does not already exist.';
+        $lines[] = "# If your customer interface is already a physical port (e.g. ether2), skip these lines.";
+        $lines[] = "/interface bridge add name=\"{$custIface}\" comment=\"Customer Bridge\" disabled=no ignore-errors=yes";
+        $lines[] = "# VERIFY: Run '/interface bridge print' to confirm the bridge was created.";
+        $lines[] = "# Uncomment and adjust the lines below to add your LAN ports to the bridge:";
+        $lines[] = "# /interface bridge port add bridge=\"{$custIface}\" interface=ether2 ignore-errors=yes";
+        $lines[] = "# /interface bridge port add bridge=\"{$custIface}\" interface=ether3 ignore-errors=yes";
         $lines[] = '';
 
         // PPPoE Server
@@ -63,7 +75,13 @@ class MikrotikScriptService
         $lines[] = '# --- Hotspot Server ---';
         $lines[] = "/ip hotspot remove [find interface=\"{$router->customer_interface}\"]";
         $lines[] = "/ip hotspot profile remove [find name=\"hsprof-radius\"]";
-        $lines[] = "/ip hotspot profile add name=\"hsprof-radius\" hotspot-address=192.168.2.1 dns-name=\"{$billingDomain}\" use-radius=yes radius-default-domain=\"\" radius-location-id=\"{$routerName}\" login-by=http-pap,http-chap rate-limit=\"\" http-cookie-lifetime=1d";
+
+        $hsProfileCmd  = "/ip hotspot profile add name=\"hsprof-radius\" hotspot-address=192.168.2.1 dns-name=\"{$billingDomain}\" use-radius=yes";
+        if (!empty($router->billing_domain)) {
+            $hsProfileCmd .= " radius-default-domain=\"{$billingDomain}\"";
+        }
+        $hsProfileCmd .= " radius-location-id=\"{$routerName}\" login-by=http-pap,http-chap http-cookie-lifetime=1d";
+        $lines[] = $hsProfileCmd;
         $lines[] = "/ip hotspot add interface={$router->customer_interface} address-pool=hotspot-pool profile=\"hsprof-radius\" name=\"hotspot-server\" disabled=no";
         $lines[] = '';
 
