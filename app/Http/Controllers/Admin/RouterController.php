@@ -33,12 +33,11 @@ class RouterController extends Controller
             'name'             => 'required|string|max:100',
             'model'            => 'nullable|string|max:100',
             'routeros_version' => 'nullable|string|max:50',
-            'vpn_ip'           => 'nullable|ip',
             'notes'            => 'nullable|string',
             'is_active'        => 'boolean',
         ]);
 
-        // Auto-generate fields (pool ranges updated after creation with real ID)
+        // Auto-generate fields (pool ranges and vpn_ip updated after creation with real ID)
         $validated['radius_secret']      = Str::random(16);
         $validated['wan_interface']      = 'ether1';
         $validated['customer_interface'] = 'bridge1';
@@ -50,13 +49,16 @@ class RouterController extends Controller
 
         $router = Router::create($validated);
 
-        // Set ref_code after we know the real ID
-        // Ensure IP octet is valid (1–254); use modulo to wrap if ID exceeds 254
-        $octet = (($router->id - 1) % 254) + 1;
+        // Set ref_code, vpn_ip, and pool ranges after we know the real ID.
+        // vpn_ip: 10.255.255.{octet} where octet = (id % 253) + 2
+        //   router 1 → .2, router 2 → .3, ..., router 253 → .254, router 254 → .2, etc.
+        $wgOctet   = (($router->id % 253) + 2);
+        $poolOctet = (($router->id - 1) % 254) + 1;
         $router->update([
             'ref_code'           => 'RTR-' . str_pad($router->id, 3, '0', STR_PAD_LEFT),
-            'pppoe_pool_range'   => "10.10.{$octet}.1-10.10.{$octet}.254",
-            'hotspot_pool_range' => "10.20.{$octet}.1-10.20.{$octet}.254",
+            'vpn_ip'             => '10.255.255.' . $wgOctet,
+            'pppoe_pool_range'   => "10.10.{$poolOctet}.1-10.10.{$poolOctet}.254",
+            'hotspot_pool_range' => "10.20.{$poolOctet}.1-10.20.{$poolOctet}.254",
         ]);
 
         AuditLog::record('router.created', Router::class, $router->id, [], $router->fresh()->toArray());
@@ -77,8 +79,6 @@ class RouterController extends Controller
             'name'               => 'required|string|max:100',
             'model'              => 'nullable|string|max:100',
             'routeros_version'   => 'nullable|string|max:50',
-            'wan_ip'             => 'nullable|ip',
-            'vpn_ip'             => 'nullable|ip',
             'radius_secret'      => 'required|string|max:100',
             'wan_interface'      => 'required|string|max:50',
             'customer_interface' => 'required|string|max:50',

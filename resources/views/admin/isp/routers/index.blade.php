@@ -54,7 +54,9 @@
                                 <th>IDENTITY</th>
                                 <th>MODEL</th>
                                 <th>VERSION</th>
+                                <th>WAN IP</th>
                                 <th>VPN IP</th>
+                                <th>WG KEY</th>
                                 <th>STATUS</th>
                                 <th>WEB</th>
                                 <th>WINBOX</th>
@@ -69,7 +71,27 @@
                                 <td><strong>{{ $router->name }}</strong></td>
                                 <td>{{ $router->model ?? '-' }}</td>
                                 <td>{{ $router->routeros_version ?? '-' }}</td>
-                                <td>{{ $router->vpn_ip ?? '-' }}</td>
+                                <td>
+                                    @if($router->wan_ip)
+                                        <span class="text-success"><i class="bx bx-check-circle me-1"></i>{{ $router->wan_ip }}</span>
+                                    @else
+                                        <span class="badge bg-warning text-dark"><i class="bx bx-time me-1"></i> Awaiting Script</span>
+                                    @endif
+                                </td>
+                                <td>
+                                    @if($router->vpn_ip)
+                                        <span class="text-success"><i class="bx bx-check-circle me-1"></i>{{ $router->vpn_ip }}</span>
+                                    @else
+                                        <span class="badge bg-warning text-dark"><i class="bx bx-time me-1"></i> Awaiting Script</span>
+                                    @endif
+                                </td>
+                                <td class="text-center">
+                                    @if($router->wg_public_key)
+                                        <i class="bx bx-lock text-success fs-5" title="WireGuard key registered"></i>
+                                    @else
+                                        <i class="bx bx-lock-open text-secondary fs-5" title="WireGuard key not yet registered"></i>
+                                    @endif
+                                </td>
                                 <td>
                                     @if($router->is_active)
                                         <span class="badge bg-label-success">Active</span>
@@ -141,7 +163,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="10" class="text-center py-4 text-muted">
+                                <td colspan="12" class="text-center py-4 text-muted">
                                     No routers found. <a href="{{ route('admin.isp.routers.create') }}">Add one now.</a>
                                 </td>
                             </tr>
@@ -180,7 +202,7 @@ $(function () {
     $('#routersTable').DataTable({
         pageLength: 25,
         order: [[1, 'asc']],
-        columnDefs: [{ orderable: false, targets: [7, 8, 9] }]
+        columnDefs: [{ orderable: false, targets: [7, 8, 9, 10, 11] }]
     });
 });
 
