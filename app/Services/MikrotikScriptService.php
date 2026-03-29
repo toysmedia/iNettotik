@@ -10,12 +10,13 @@ class MikrotikScriptService
      */
     public function generate(Router $router): string
     {
-        $radiusIp  = config('radius.server_ip', env('RADIUS_SERVER_IP', parse_url(config('app.url'), PHP_URL_HOST)));
+        $radiusIp  = $this->resolveRadiusIp();
         $nasSecret = $router->radius_secret;
         $routerName = preg_replace('/[^a-zA-Z0-9\-]/', '-', $router->name);
         $billingDomain = $router->billing_domain ?: parse_url(config('app.url'), PHP_URL_HOST);
         $mgmtIps = env('MANAGEMENT_IPS', '192.168.88.1,10.0.0.1');
         $mgmtIpList = array_filter(array_map('trim', explode(',', $mgmtIps)));
+        $customerIface = $router->customer_interface ?: 'bridge1';
 
         $lines = [];
 
@@ -32,10 +33,20 @@ class MikrotikScriptService
         $lines[] = "/system identity set name=\"{$routerName}\"";
         $lines[] = '';
 
-        // RADIUS client
+        // Bridge / Customer Interface creation
+        $lines[] = '# --- Customer Interface (Bridge) ---';
+        $lines[] = "# Ensure the customer interface '{$customerIface}' exists.";
+        $lines[] = "# If it does not exist, uncomment the lines below and adjust port assignments.";
+        $lines[] = "# :if ([:len [/interface bridge find name=\"{$customerIface}\"]] = 0) do={";
+        $lines[] = "#   /interface bridge add name=\"{$customerIface}\" comment=\"Customer Bridge\" disabled=no";
+        $lines[] = "#   /interface bridge port add bridge=\"{$customerIface}\" interface=ether2";
+        $lines[] = "# }";
+        $lines[] = '';
+
+        // RADIUS client — nas-identifier is NOT supported in RouterOS v7; use /system identity instead
         $lines[] = '# --- RADIUS Client ---';
         $lines[] = '/radius remove [find]';
-        $lines[] = "/radius add address={$radiusIp} secret=\"{$nasSecret}\" service=ppp,hotspot,login nas-identifier=\"{$routerName}\"";
+        $lines[] = "/radius add address={$radiusIp} secret=\"{$nasSecret}\" service=ppp,hotspot,login";
         $lines[] = '/radius incoming set accept=yes port=3799';
         $lines[] = '';
 
@@ -47,24 +58,31 @@ class MikrotikScriptService
         $lines[] = "/ip pool add name=\"hotspot-pool\" ranges={$router->hotspot_pool_range}";
         $lines[] = '';
 
-        // PPP Profiles
+        // PPP Profiles — rate-limit must be omitted when empty; RADIUS supplies Mikrotik-Rate-Limit
         $lines[] = '# --- PPP Profiles ---';
         $lines[] = '/ppp profile remove [find name="pppoe-radius"]';
-        $lines[] = '/ppp profile add name="pppoe-radius" use-radius=yes local-address=pppoe-pool remote-address=pppoe-pool rate-limit="" only-one=yes';
+        $lines[] = '/ppp profile add name="pppoe-radius" use-radius=yes local-address=pppoe-pool remote-address=pppoe-pool only-one=yes';
         $lines[] = '';
 
         // PPPoE Server
         $lines[] = '# --- PPPoE Server ---';
-        $lines[] = "/interface pppoe-server server remove [find interface=\"{$router->customer_interface}\"]";
-        $lines[] = "/interface pppoe-server server add interface={$router->customer_interface} service-name=\"pppoe-service\" default-profile=\"pppoe-radius\" authentication=mschap2,mschap1,chap,pap one-session-per-host=yes disabled=no";
+        $lines[] = "/interface pppoe-server server remove [find interface=\"{$customerIface}\"]";
+        $lines[] = "/interface pppoe-server server add interface={$customerIface} service-name=\"pppoe-service\" default-profile=\"pppoe-radius\" authentication=mschap2,mschap1,chap,pap one-session-per-host=yes disabled=no";
         $lines[] = '';
 
-        // Hotspot Setup
+        // Hotspot Setup — omit rate-limit and radius-default-domain when empty
+        $hotspotProfileCmd  = "/ip hotspot profile add name=\"hsprof-radius\"";
+        $hotspotProfileCmd .= " hotspot-address=192.168.2.1 dns-name=\"{$billingDomain}\"";
+        $hotspotProfileCmd .= " use-radius=yes radius-location-id=\"{$routerName}\"";
+        $hotspotProfileCmd .= " login-by=http-pap,http-chap http-cookie-lifetime=1d";
+        if (!empty($billingDomain)) {
+            $hotspotProfileCmd .= " radius-default-domain=\"{$billingDomain}\"";
+        }
         $lines[] = '# --- Hotspot Server ---';
-        $lines[] = "/ip hotspot remove [find interface=\"{$router->customer_interface}\"]";
+        $lines[] = "/ip hotspot remove [find interface=\"{$customerIface}\"]";
         $lines[] = "/ip hotspot profile remove [find name=\"hsprof-radius\"]";
-        $lines[] = "/ip hotspot profile add name=\"hsprof-radius\" hotspot-address=192.168.2.1 dns-name=\"{$billingDomain}\" use-radius=yes radius-default-domain=\"\" radius-location-id=\"{$routerName}\" login-by=http-pap,http-chap rate-limit=\"\" http-cookie-lifetime=1d";
-        $lines[] = "/ip hotspot add interface={$router->customer_interface} address-pool=hotspot-pool profile=\"hsprof-radius\" name=\"hotspot-server\" disabled=no";
+        $lines[] = $hotspotProfileCmd;
+        $lines[] = "/ip hotspot add interface={$customerIface} address-pool=hotspot-pool profile=\"hsprof-radius\" name=\"hotspot-server\" disabled=no";
         $lines[] = '';
 
         // Hotspot Walled Garden
@@ -101,7 +119,7 @@ class MikrotikScriptService
         $lines[] = '';
         $lines[] = '# Client-to-client blocking';
         $lines[] = '/ip firewall filter remove [find comment="ISP-NO-CLIENT2CLIENT"]';
-        $lines[] = "/ip firewall filter add chain=forward in-interface={$router->customer_interface} out-interface={$router->customer_interface} action=drop comment=\"ISP-NO-CLIENT2CLIENT\"";
+        $lines[] = "/ip firewall filter add chain=forward in-interface={$customerIface} out-interface={$customerIface} action=drop comment=\"ISP-NO-CLIENT2CLIENT\"";
         $lines[] = '';
         $lines[] = '# Brute force SSH protection';
         $lines[] = '/ip firewall filter remove [find comment="ISP-BRUTE-SSH"]';
@@ -152,5 +170,19 @@ class MikrotikScriptService
         $lines[] = '# ============================================================';
 
         return implode("\n", $lines);
+    }
+
+    /**
+     * Resolve the RADIUS server IP to use in generated scripts.
+     * Prefers RADIUS_SERVER_IP env var, then app.url host, never returns empty.
+     */
+    protected function resolveRadiusIp(): string
+    {
+        $ip = config('radius.server_ip', env('RADIUS_SERVER_IP', ''));
+        if ($ip) {
+            return $ip;
+        }
+        $host = parse_url(config('app.url'), PHP_URL_HOST);
+        return $host ?: '127.0.0.1';
     }
 }
