@@ -210,7 +210,7 @@ class RouterController extends Controller
             ['nasname' => $router->wan_ip],
             [
                 'shortname'   => $router->name,
-                'type'        => 'other',
+                'type'        => 'mikrotik',
                 'secret'      => $router->radius_secret,
                 'description' => $router->name . ' - MikroTik',
             ]
